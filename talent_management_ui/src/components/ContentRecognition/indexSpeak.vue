@@ -1,0 +1,159 @@
+<template>
+  <!-- 内容识别框 -->
+  <div class="show-container">
+    <div class="show-frame">
+      <div class="show-title">内容识别框</div>
+      <el-button type="primary" @click="handleSubmit" size="mini" style="margin-right: 20px">保存</el-button>
+      <el-popover
+        placement="top-start"
+        width="300"
+        trigger="click"
+      >
+      <div style="user-select: text;">
+        姓名：刘倩<br>
+        性别：女<br>
+        电话：13604524587<br>
+        年龄：25<br>
+        学历：研究生<br>
+      </div>
+      <el-button slot="reference" type="text">查看示例</el-button>
+      </el-popover>
+      <el-select v-model="locationId" placeholder="请选择面试点位" @change="changeLocation" style="width: 50%; margin-left: auto;">
+        <el-option v-for="item in locationList" :key="item.id" :label="item.name" :value="item.id"/>
+      </el-select>
+    </div>
+    <el-input
+      type="textarea"
+      :rows="7"
+      v-model="textarea"
+      :placeholder="`例如：
+姓名：刘倩
+性别：女
+电话：13604524587
+年龄：25
+学历：研究生`">
+    </el-input>
+
+  </div>
+</template>
+
+<script>
+
+export default {
+   name:'ContentRecognition',
+  props: {
+    dictMap: { type: Object, default: () => ({}) },
+    locationList: { type: Array, default: () => [] },
+  },
+   data() {
+      return {
+        textarea: '',       // 将要识别的内容
+        sexList:[],         // 性别列表
+        educationList:[],    // 学历列表
+        locationId: null, // 查询点位id
+        locationName: null, // 查询点位名称
+      }
+   },
+  watch: {
+     // 设置点位初始值
+    locationList(newVal) {
+      if (newVal && newVal.length > 0 && !this.locationId) {
+        this.locationId = newVal[0].id
+        this.locationName = newVal[0].name
+      }
+    }
+  },
+
+  mounted(){
+     this.sexList = this.dictMap.sys_user_sex;
+     this.educationList = this.dictMap.sys_education;
+   },
+   methods:{
+
+     /** 获取面试点位名称 */
+     changeLocation(val){
+       this.locationName = this.locationList?.find(item => item.id === val)?.name
+     },
+
+      // 识别信息
+      handleSubmit() {
+        if (!this.textarea.trim()) {
+            this.$message.warning('请输入内容');
+            return;
+        }
+        // 解析文本内容
+        const lines = this.textarea.split('\n');
+        const result = {};
+
+        lines.forEach(line => {
+            // 使用正则表达式匹配键值对
+            // 匹配模式：开头是任意字符（键），然后跟着一个或多个分隔符（;:：；，,），最后是值
+            const match = line.match(/^([^;:：；，,]+)[;:：；，,]+\s*(.*)$/);
+            if (match) {
+                const key = this.getChangeKey(match[1].trim());
+                const value = match[2].trim();
+                if (key && value) {
+                    result[key] = value;
+                }
+                if(result.sex){
+                  result.sex = this.sexList?.find(item=>item.label == result.sex)?.value
+                }
+                if(result.education){
+                  result.education = this.educationList?.find(item=>item.label == result.education)?.value
+                }
+            }
+        });
+        // 面试点位信息
+        result.locationId = this.locationId;
+        result.locationName = this.locationName;
+
+        this.$emit('close', result);
+      },
+      // 文字转换为key值
+      getChangeKey(value) {
+        let key = '';
+        switch(String(value)) {
+            case '姓名':
+                key = 'name';
+                break;
+            case '性别':
+                key = 'sex';
+                break;
+            case '电话':
+                key = 'phone';
+                break;
+            case '年龄':
+                key = 'age';
+                break;
+            case '学历':
+                key = 'education';
+                break;
+            default:
+                key = value;
+        }
+        return key;
+      },
+     /** 重置表单 */
+     clear() {
+       this.textarea = ''
+     }
+   },
+}
+</script>
+
+<style scoped lang="scss">
+  .show-frame{
+    display: flex;
+    align-items: center;
+    margin: -2px 0 10px 0;
+    .show-title{
+        margin-right: 20px;
+        font-size: 18px;
+        font-weight: 700;
+    }
+  }
+  /* 允许复制 */
+  .custom-tooltip {
+    user-select: text !important;
+  }
+</style>

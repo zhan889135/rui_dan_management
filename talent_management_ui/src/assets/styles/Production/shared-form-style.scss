@@ -1,0 +1,84 @@
+
+.custom-dialog ::v-deep .el-dialog:not(.is-fullscreen){
+  margin-top: 2vh !important;
+}
+
+/* 去除 col 内部的多余 margin */
+.form-scroll-wrapper .el-form-item {
+  margin-bottom: 15px; /* 或者更小，比如 6px，看你期望的紧凑程度 */
+}
+
+/* 四大块卡片之间的间距 */
+.mb16 {
+  margin-bottom: 10px;
+}
+
+/* 外层滚动容器 */
+.form-scroll-wrapper {
+  max-height: 83vh;
+  min-height: 83vh;
+  overflow-y: auto;
+  padding-right: 8px;
+  padding-top: 1px;
+}
+
+/* 调整卡片间距 */
+::v-deep .el-card__body{
+  padding: 10px 10px 0 20px;
+}
+
+/* 卡片标题样式 */
+::v-deep .el-card__header {
+  height: 25px;
+  line-height: 25px;
+  background-color: #eaf2ff;  /* 柔和蓝背景 */
+  text-align: center;
+  font-weight: 600;
+  font-size: 14px;
+  color: #2c3e50;
+  border-bottom: 1px solid #d3e0f0;
+  padding: 0;
+  min-height: 10px;
+}
+/* 卡片整体样式美化 */
+::v-deep .el-card {
+  border-radius: 10px;
+  border: 1px solid #d3e0f0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  transition: all 0.3s ease-in-out;
+  overflow: hidden;
+}
+
+/* 悬浮时增强卡片效果 */
+::v-deep .el-card:hover {
+  border-color: #409EFF; /* 更明显的边框色 */
+  box-shadow: 0 4px 16px rgba(64, 158, 255, 0.25); /* 更强的阴影 */
+  /*transform: translateY(-1px);  稍微抬起一点 */
+  background-color: #f9fbff; /* 可选：略微提亮背景 */
+}
+
+/* 附件名称 */
+.ellipsis-link {
+  display: inline-block;
+  max-width: 310px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  vertical-align: middle;
+}
+
+.form-label-tooltip {
+  display: inline-flex;
+  align-items: center;
+  line-height: normal;
+  white-space: nowrap;  /* 避免换行 */
+}
+
+::v-deep .el-form-item--medium .el-form-item__label{
+  line-height: 37px !important;
+}
+
+/* 卡片伸缩、展开 */
+.collapsible-row {
+  overflow: hidden;
+}

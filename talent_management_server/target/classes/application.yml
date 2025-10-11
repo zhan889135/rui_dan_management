@@ -1,0 +1,68 @@
+# 项目相关配置
+system:
+  # 名称
+  name: Talent
+  # 版本
+  version: 3.8.9
+  # 版权年份
+  copyrightYear: 2025
+  # 文件路径 示例（ Windows配置D:/file/uploadPath，Linux配置 /home/file/uploadPath）
+  profile: ${user.dir}
+  # 获取ip地址开关
+  addressEnabled: true
+  # 验证码类型 math 数字计算 char 字符验证
+  captchaType: math
+server:
+  port: 8095
+
+spring:
+  profiles:
+    active: dev  # 默认启用开发环境，可改为 prod
+  # 资源信息
+  messages:
+    # 国际化资源文件路径
+    basename: i18n/messages
+  servlet:
+    multipart:
+      max-file-size: 200MB
+      max-request-size: 200MB
+# token配置
+token:
+  # 令牌自定义标识
+  header: Authorization
+  # 令牌密钥
+  secret: abcdefghijklmnopqrstuvwxyz
+  # 令牌有效期（默认300分钟）
+  expireTime: 300
+# 用户配置
+user:
+  password:
+    # 密码最大错误次数
+    maxRetryCount: 5
+    # 密码锁定时间（默认10分钟）
+    lockTime: 10
+    # 导入默认密码
+    default: 123456
+logging :
+  home: ${user.dir}
+  level:
+    com.talent: debug
+    org.springframework: warn
+    org.mysql.driver: ERROR
+
+mybatis-plus:
+  configLocation: classpath:mybatis/mybatis-config.xml
+  #mapper-locations: classpath*:/mapper/**/*Mapper.xml
+  #实体扫描，多个package用逗号或者分号分隔
+  typeAliasesPackage: com.talent.**.entity
+  global-config:
+    db-config:
+      id-type: auto
+      logic-delete-value: Y
+      logic-not-delete-value: N
+
+# PageHelper分页插件
+pagehelper:
+  helperDialect: mysql
+  supportMethodsArguments: true
+  params: count=countSql

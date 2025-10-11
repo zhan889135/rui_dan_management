@@ -1,0 +1,306 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  min-height: 100vh;
+  background: #f8fafc;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Inter', sans-serif;
+  padding: 2rem;
+}
+
+.showcase {
+  max-width: 900px;
+  width: 100%;
+  text-align: center;
+}
+
+.header {
+  margin-bottom: 4rem;
+}
+
+.main-title {
+  font-size: 3rem;
+  font-weight: 700;
+  color: #1f2937;
+  margin-bottom: 1rem;
+  letter-spacing: 2px;
+}
+
+.description {
+  font-size: 1.2rem;
+  color: #6b7280;
+  font-weight: 400;
+  letter-spacing: 0.5px;
+}
+
+.button-collection {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 2.5rem;
+  margin-bottom: 3rem;
+}
+
+.button-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.button-label {
+  color: #64748b;
+  font-size: 0.9rem;
+  font-weight: 500;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.shine-button {
+  position: relative;
+  padding: 1.2rem 2.5rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  letter-spacing: 0.5px;
+  min-width: 200px;
+}
+
+.shine-button::before {
+  content: '';
+  position: absolute;
+  height: 250%;
+  width: 40px;
+  top: 0;
+  left: -60px;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+  transform: rotate(45deg) translateY(-35%);
+  animation: shine 3s ease infinite;
+}
+
+@keyframes shine {
+  0% {
+    left: -80px;
+  }
+  40% {
+    left: calc(100% + 20px);
+  }
+  100% {
+    left: calc(100% + 20px);
+  }
+}
+
+.button-ocean {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #fff;
+  box-shadow: 
+    0 10px 30px rgba(102, 126, 234, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.button-ocean:hover {
+  transform: translateY(-3px);
+  box-shadow: 
+    0 15px 40px rgba(102, 126, 234, 0.6),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.button-emerald {
+  background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+  color: #fff;
+  box-shadow: 
+    0 10px 30px rgba(17, 153, 142, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.button-emerald:hover {
+  transform: translateY(-3px);
+  box-shadow: 
+    0 15px 40px rgba(17, 153, 142, 0.6),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.button-sunset {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  color: #fff;
+  box-shadow: 
+    0 10px 30px rgba(240, 147, 251, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.button-sunset:hover {
+  transform: translateY(-3px);
+  box-shadow: 
+    0 15px 40px rgba(240, 147, 251, 0.6),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.button-deep {
+  background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 50%, #2563eb 100%);
+  color: #fff;
+  box-shadow: 
+    0 10px 30px rgba(30, 58, 138, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.button-deep:hover {
+  transform: translateY(-3px);
+  box-shadow: 
+    0 15px 40px rgba(30, 58, 138, 0.6),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.button-gold {
+  background: linear-gradient(135deg, #f7971e 0%, #ffd200 100%);
+  color: #fff;
+  box-shadow: 
+    0 10px 30px rgba(247, 151, 30, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.button-gold:hover {
+  transform: translateY(-3px);
+  box-shadow: 
+    0 15px 40px rgba(247, 151, 30, 0.6),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+
+.button-chrome {
+  background: linear-gradient(135deg, #bdc3c7 0%, #2c3e50 100%);
+  color: #fff;
+  box-shadow: 
+    0 10px 30px rgba(45, 62, 80, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.1);
+}
+
+.button-chrome:hover {
+  background: linear-gradient(135deg, #d5dbdb 0%, #34495e 100%);
+  transform: translateY(-3px);
+  box-shadow: 
+    0 15px 40px rgba(45, 62, 80, 0.6),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.1);
+}
+
+.button-purple {
+  background: linear-gradient(135deg, #8b5cf6 0%, #a855f7 100%);
+  color: #fff;
+  box-shadow: 
+    0 10px 30px rgba(139, 92, 246, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.button-purple:hover {
+  transform: translateY(-3px);
+  box-shadow: 
+    0 15px 40px rgba(139, 92, 246, 0.6),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.button-mint {
+  background: linear-gradient(135deg, #2dd4bf 0%, #06b6d4 100%);
+  color: #fff;
+  box-shadow: 
+    0 10px 30px rgba(45, 212, 191, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.button-mint:hover {
+  transform: translateY(-3px);
+  box-shadow: 
+    0 15px 40px rgba(45, 212, 191, 0.6),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.button-electric {
+  background: linear-gradient(135deg, #32ff32 0%, #65ff65 50%, #98ff98 100%);
+  color: #fff;
+  box-shadow: 
+    0 10px 30px rgba(50, 255, 50, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.button-electric:hover {
+  transform: translateY(-3px);
+  box-shadow: 
+    0 15px 40px rgba(50, 255, 50, 0.6),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.button-lavender {
+  background: linear-gradient(135deg, #9ca3af 0%, #c084fc 50%, #a78bfa 100%);
+  color: #fff;
+  box-shadow: 
+    0 10px 30px rgba(192, 132, 252, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.button-lavender:hover {
+  transform: translateY(-3px);
+  box-shadow: 
+    0 15px 40px rgba(192, 132, 252, 0.6),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+
+.button-fire {
+  background: linear-gradient(135deg, #ff4500 0%, #ff6347 50%, #ffa500 100%);
+  color: #fff;
+  box-shadow: 
+    0 10px 30px rgba(255, 69, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.button-fire:hover {
+  transform: translateY(-3px);
+  box-shadow: 
+    0 15px 40px rgba(255, 69, 0, 0.6),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.button-forest {
+  background: linear-gradient(135deg, #134e5e 0%, #71b280 100%);
+  color: #fff;
+  box-shadow: 
+    0 10px 30px rgba(19, 78, 94, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.button-forest:hover {
+  transform: translateY(-3px);
+  box-shadow: 
+    0 15px 40px rgba(19, 78, 94, 0.6),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.shine-button:active {
+  transform: translateY(-1px);
+  transition: transform 0.1s ease;
+}
+
+@media (max-width: 768px) {
+  .button-collection {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+
+  .main-title {
+    font-size: 2.5rem;
+    letter-spacing: 1px;
+  }
+
+  .description {
+    font-size: 1.1rem;
+  }
+}
