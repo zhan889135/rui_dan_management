@@ -1,4 +1,4 @@
-# 告诉EditorConfig插件，这是根文件，不用继续往上查找
+# 告诉EditorConfig插件，这是根文件，不用继续往上查找123
 root = true
 
 # 匹配全部文件
