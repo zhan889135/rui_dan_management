@@ -18,6 +18,14 @@ export function listUserKv(query) {
     params: query
   })
 }
+// 查询自己部门下的用户，包含当前部门
+export function listUserKvSubDept(query) {
+  return request({
+    url: '/system/user/listUserKvSubDept',
+    method: 'get',
+    params: query
+  })
+}
 
 // 查询用户详细
 export function getUser(userId) {
@@ -149,6 +157,14 @@ export function updateAuthRole(data) {
 export function deptTreeSelect() {
   return request({
     url: '/system/user/deptTree',
+    method: 'get'
+  })
+}
+
+// 查询部门下拉树结构
+export function deptTreeSelectSubDept() {
+  return request({
+    url: '/system/user/deptTreeSelectSubDept',
     method: 'get'
   })
 }

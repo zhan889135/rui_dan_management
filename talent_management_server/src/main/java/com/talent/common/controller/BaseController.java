@@ -15,7 +15,9 @@ import org.springframework.web.bind.annotation.InitBinder;
 
 import java.beans.PropertyEditorSupport;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * web层通用数据处理
@@ -71,6 +73,21 @@ public class BaseController
         rspData.setMsg("查询成功");
         rspData.setRows(list);
         rspData.setTotal(total); // 原始总数
+        return rspData;
+    }
+
+    /**
+     * 自定义返回数据
+     */
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    protected TableDataInfo getDataTable(List<?> list, Map<String, String> map)
+    {
+        TableDataInfo rspData = new TableDataInfo();
+        rspData.setCode(HttpStatus.SUCCESS);
+        rspData.setMsg("查询成功");
+        rspData.setRows(list);
+        rspData.setTotal(new PageInfo(list).getTotal());
+        rspData.setMap(map);
         return rspData;
     }
 

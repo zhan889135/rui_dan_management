@@ -4,6 +4,7 @@ import javax.validation.Validator;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.talent.common.constant.Constants;
+import com.talent.interview.utils.DeptPermissionUtil;
 import com.talent.system.entity.*;
 import com.talent.system.mapper.*;
 import com.talent.system.service.ISysUserService;
@@ -721,6 +722,40 @@ public class SysUserServiceImpl implements ISysUserService
                                 .inSql(SysUser::getDeptId,
                                         "SELECT t.dept_id FROM sys_dept t WHERE FIND_IN_SET(" + user.getDeptId() + ", t.ancestors) AND t.del_flag = 'N'")
                         ).ne(SysUser::getUserName, "admin")
+                        .ne(SysUser::getStatus, Constants.RET_CODE_1)
+        );
+    }
+
+    /**
+     * 查询自己部门下的用户，包含当前部门
+     */
+    @Override
+    public List<SysUser> listUserKvSubDept(SysUser user) {
+        // 获取当前部门及子部门 ID
+        List<Long> deptIds = DeptPermissionUtil.getDeptAndChildrenIds(SecurityUtils.getDeptId());
+
+        return userMapper.selectList(
+                new LambdaQueryWrapper<SysUser>()
+                        .select(
+                                SysUser::getUserId,
+                                SysUser::getDeptId,
+                                SysUser::getUserName,
+                                SysUser::getNickName,
+                                SysUser::getPhoneNumber,
+                                SysUser::getCreateTime
+                        )
+                        // 新增：仅限本部门及子部门
+                        .in(SysUser::getDeptId, deptIds)
+                        // 原有条件：指定部门或其祖先包含该部门
+                        .and(StringUtils.isNotNull(user.getDeptId()), wrapper -> wrapper
+                                .eq(SysUser::getDeptId, user.getDeptId())
+                                .or()
+                                .inSql(SysUser::getDeptId,
+                                        "SELECT t.dept_id FROM sys_dept t WHERE FIND_IN_SET(" + user.getDeptId() + ", t.ancestors) AND t.del_flag = 'N'")
+                        )
+                        // 排除 admin 用户
+                        .ne(SysUser::getUserName, "admin")
+                        // 排除状态为 '1' 的用户（假设 Constants.RET_CODE_1 表示禁用状态）
                         .ne(SysUser::getStatus, Constants.RET_CODE_1)
         );
     }

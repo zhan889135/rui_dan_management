@@ -1,16 +1,17 @@
 package com.talent.system.service.impl;
 
-import java.util.Arrays;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.talent.interview.entity.Report;
 import com.talent.interview.utils.DeptPermissionUtil;
+import com.talent.system.entity.SysDept;
 import com.talent.system.entity.SysNotice;
 import com.talent.common.utils.StringUtils;
+import com.talent.system.mapper.SysDeptMapper;
 import com.talent.system.mapper.SysNoticeMapper;
 import com.talent.system.service.ISysNoticeService;
+import com.talent.system.utils.SysUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -24,6 +25,9 @@ public class SysNoticeServiceImpl implements ISysNoticeService {
 
     @Autowired
     private SysNoticeMapper noticeMapper;
+
+    @Autowired
+    private SysDeptMapper sysDeptMapper;
 
     @Override
     public SysNotice selectNoticeById(Long noticeId) {
@@ -50,13 +54,24 @@ public class SysNoticeServiceImpl implements ISysNoticeService {
     @Override
     public int insertNotice(SysNotice notice) {
         notice.setCreateTime(new Date()); // 如果用自动填充也可以去掉
+        notice.setDeptId(joinDeptId(notice.getDeptId()));
         return noticeMapper.insert(notice);
     }
 
     @Override
     public int updateNotice(SysNotice notice) {
         notice.setUpdateTime(new Date());
+        notice.setDeptId(joinDeptId(notice.getDeptId()));
         return noticeMapper.updateById(notice);
+    }
+
+    // 发公告，选择二级供应商后，要递归回去二级的所有子部门
+    public String joinDeptId(String deptId){
+        // 查询全部部门
+        List<SysDept> sysDeptList = Optional.ofNullable(sysDeptMapper.selectList(null)).orElse(new ArrayList<>());
+
+        // 发公告，选择二级供应商后，要递归回去二级的所有子部门
+        return SysUtil.searchSubDeptAndJoinId(deptId, sysDeptList);
     }
 
     @Override

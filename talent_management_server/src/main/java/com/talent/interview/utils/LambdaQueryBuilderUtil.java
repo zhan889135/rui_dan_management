@@ -92,16 +92,10 @@ public class LambdaQueryBuilderUtil {
             // 模糊查询：创建人名称
             wrapper.like(StringUtils.isNotBlank(entity.getCreateName()), Report::getCreateName, entity.getCreateName());
 
-            // 面试日期（支持精确、区间查询）
-//            if (entity.getInterviewDate() != null) {
-//                wrapper.eq(Report::getInterviewDate, entity.getInterviewDate());
-//            } else if (entity.getStartDate() != null && entity.getEndDate() != null) {
-//                wrapper.between(Report::getInterviewDate, entity.getStartDate(), entity.getEndDate());
-//            } else if (entity.getStartDate() != null) {
-//                wrapper.ge(Report::getInterviewDate, entity.getStartDate());
-//            } else if (entity.getEndDate() != null) {
-//                wrapper.le(Report::getInterviewDate, entity.getEndDate());
-//            }
+            // 面试日期（支持精确、区间查询）默认查询第二天的
+            if (entity.getInterviewDate() != null) {
+                wrapper.eq(Report::getInterviewDate, entity.getInterviewDate());
+            }
 
             // 日期范围查询
             String[] range = entity.getDateRange();

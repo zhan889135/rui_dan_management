@@ -25,6 +25,11 @@ public interface ISysDeptService
     List<TreeSelect> selectDeptTreeList(SysDept dept);
 
     /**
+     * 获取自己部门，以及当前部门
+     */
+    List<TreeSelect> selectSubDeptTreeList(SysDept dept);
+
+    /**
      * 构建前端所需要树结构
      */
     List<SysDept> buildDeptTree(List<SysDept> depts);

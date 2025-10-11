@@ -281,6 +281,9 @@ export default {
         delete this.rules.reason;
         delete this.rules.hardRequirements;
         delete this.rules.isBilling;
+      }else if (this.deptLevel === 1) {
+        // level=1，反馈原因非必填
+        delete this.rules.reason;
       }
     },
 

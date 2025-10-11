@@ -23,6 +23,7 @@
       </el-form-item>
 
     </el-form>
+
     <el-table
       v-loading="loading"
       :data="list.slice((pageNum-1)*pageSize,pageNum*pageSize)"
@@ -81,7 +82,7 @@ export default {
       queryParams: {
         ipaddr: undefined,
         userName: undefined
-      }
+      },
     };
   },
   created() {
@@ -119,4 +120,3 @@ export default {
   }
 };
 </script>
-

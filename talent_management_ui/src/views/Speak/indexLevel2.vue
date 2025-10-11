@@ -240,7 +240,7 @@ import {
   removeMember,
   addMember,
 } from '@/api/speak'
-import {deptTreeSelect, listUserKv} from "@/api/system/user";
+import {deptTreeSelect, deptTreeSelectSubDept, listUserKv, listUserKvSubDept} from "@/api/system/user";
 import { getNickNameByUserId, parseTime } from "@/utils/ruoyi";
 import Treeselect from "@riophae/vue-treeselect";
 import "@riophae/vue-treeselect/dist/vue-treeselect.css";
@@ -508,7 +508,7 @@ export default {
     // 添加用户弹窗
     /** 查询部门下拉树结构 */
     getDeptTree() {
-      deptTreeSelect().then(response => {
+      deptTreeSelectSubDept().then(response => {
         this.deptOptions = response.data;
         this.enabledDeptOptions = this.filterDisabledDept(JSON.parse(JSON.stringify(response.data)));
       });
@@ -538,7 +538,7 @@ export default {
       // 如果 data 为 null，就传 null；否则传 data.id
       const deptId = data && data.id ? data.id : null;
 
-      listUserKv({ deptId })
+      listUserKvSubDept({ deptId })
         .then(response => {
           this.addUserList = response.data || [];
         })

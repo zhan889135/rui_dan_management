@@ -2,6 +2,7 @@ package com.talent.common.page;
 
 import java.io.Serializable;
 import java.util.List;
+import java.util.Map;
 
 /**
  * 表格分页数据对象
@@ -23,6 +24,17 @@ public class TableDataInfo implements Serializable
 
     /** 消息内容 */
     private String msg;
+
+    /** 自定义返回值 */
+    private Map<String, String> map;
+
+    public Map<String, String> getMap() {
+        return map;
+    }
+
+    public void setMap(Map<String, String> map) {
+        this.map = map;
+    }
 
     /**
      * 表格数据对象

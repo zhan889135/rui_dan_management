@@ -5,10 +5,12 @@ import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.talent.common.constant.Constants;
 import com.talent.common.constant.UserConstants;
 import com.talent.common.domain.AjaxResult;
+import com.talent.common.utils.SecurityUtils;
 import com.talent.interview.entity.Feedback;
 import com.talent.interview.entity.Location;
 import com.talent.interview.mapper.FeedbackMapper;
 import com.talent.interview.mapper.LocationMapper;
+import com.talent.interview.utils.DeptPermissionUtil;
 import com.talent.system.config.annotation.DataScope;
 import com.talent.system.entity.*;
 import com.talent.common.domain.tree.TreeSelect;
@@ -272,6 +274,18 @@ public class SysDeptServiceImpl implements ISysDeptService
     public List<TreeSelect> selectDeptTreeList(SysDept dept)
     {
         List<SysDept> depts = deptMapper.selectList(new LambdaQueryWrapper<SysDept>().orderByAsc(SysDept::getOrderNum));
+        return buildDeptTreeSelect(depts);
+    }
+
+    /**
+     * 获取自己部门，以及当前部门
+     */
+    @Override
+    public List<TreeSelect> selectSubDeptTreeList(SysDept dept) {
+        // 获取当前部门及子部门 ID
+        List<Long> deptIds = DeptPermissionUtil.getDeptAndChildrenIds(SecurityUtils.getDeptId());
+
+        List<SysDept> depts = deptMapper.selectList(new LambdaQueryWrapper<SysDept>().in(SysDept::getDeptId, deptIds).orderByAsc(SysDept::getOrderNum));
         return buildDeptTreeSelect(depts);
     }
 

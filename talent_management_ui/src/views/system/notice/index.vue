@@ -4,11 +4,6 @@
       <el-form-item label="公告标题" prop="noticeTitle">
         <el-input v-model="queryParams.noticeTitle" placeholder="请输入公告标题" clearable @keyup.enter.native="handleQuery"/>
       </el-form-item>
-<!--      <el-form-item label="类型" prop="noticeType">-->
-<!--        <el-select v-model="queryParams.noticeType" placeholder="公告类型" clearable>-->
-<!--          <el-option v-for="dict in dict.type.sys_notice_type" :key="dict.value" :label="dict.label" :value="dict.value"/>-->
-<!--        </el-select>-->
-<!--      </el-form-item>-->
       <el-form-item>
         <el-button type="primary" icon="el-icon-search" size="mini" @click="handleQuery">搜索</el-button>
         <el-button icon="el-icon-refresh" size="mini" @click="resetQuery">重置</el-button>
@@ -27,17 +22,12 @@
         <el-table-column type="selection" width="55" align="center" />
         <el-table-column label="序号" align="center" prop="noticeId" width="100" />
         <el-table-column label="公告标题" align="center" prop="noticeTitle" :show-overflow-tooltip="true"/>
-<!--        <el-table-column label="公告类型" align="center" prop="noticeType" width="200">-->
-<!--          <template slot-scope="scope">-->
-<!--            <dict-tag :options="dict.type.sys_notice_type" :value="scope.row.noticeType"/>-->
-<!--          </template>-->
-<!--        </el-table-column>-->
         <el-table-column label="状态" align="center" prop="status" width="200">
           <template slot-scope="scope">
             <dict-tag :options="dict.type.sys_notice_status" :value="scope.row.status"/>
           </template>
         </el-table-column>
-        <el-table-column label="归属供应商" align="center" prop="deptName" width="200"/>
+        <el-table-column label="归属供应商" align="center" prop="deptName"/>
         <el-table-column label="创建人" align="center" prop="createBy" width="200">
           <template slot-scope="{ row }"><span>{{ getNickNameByUserName(row.createBy, userList) }}</span></template>
         </el-table-column>
@@ -57,45 +47,51 @@
     <pagination v-show="total>0" :total="total" :page.sync="queryParams.pageNum" :limit.sync="queryParams.pageSize" @pagination="getList"/>
 
     <!-- 添加或修改公告对话框 -->
-    <el-dialog :title="title" :visible.sync="open" width="780px" append-to-body>
-      <el-form ref="form" :model="form" :rules="rules" label-width="100px">
-        <el-row>
-          <el-col :span="12">
-            <el-form-item label="公告标题" prop="noticeTitle">
-              <el-input v-model="form.noticeTitle" placeholder="请输入公告标题" />
-            </el-form-item>
-          </el-col>
-<!--          <el-col :span="12">-->
-<!--            <el-form-item label="公告类型" prop="noticeType">-->
-<!--              <el-select v-model="form.noticeType" placeholder="请选择公告类型">-->
-<!--                <el-option v-for="dict in dict.type.sys_notice_type" :key="dict.value" :label="dict.label" :value="dict.value"></el-option>-->
-<!--              </el-select>-->
-<!--            </el-form-item>-->
-<!--          </el-col>-->
-          <el-col :span="12">
-            <el-form-item label="状态">
-              <el-radio-group v-model="form.status">
-                <el-radio v-for="dict in dict.type.sys_notice_status" :key="dict.value" :label="dict.value">{{dict.label}}</el-radio>
-              </el-radio-group>
-            </el-form-item>
-          </el-col>
-          <el-col :span="24">
-            <el-form-item label="内容">
-              <editor v-model="form.noticeContent" :min-height="192"/>
-            </el-form-item>
-          </el-col>
-          <el-col :span="24">
-            <el-form-item label="归属供应商">
-              <el-input v-model="form.deptName" disabled/>
-            </el-form-item>
-          </el-col>
-          <el-col :span="24">
-            <el-form-item label="创建人">
-              <el-input :value="getNickNameByUserName(form.createBy, userList)" disabled/>
-            </el-form-item>
-          </el-col>
-        </el-row>
-      </el-form>
+    <el-dialog :title="title" :visible.sync="open" :close-on-click-modal="false" :close-on-press-escape="false" v-on="$listeners" class="custom-dialog" width="60%" >
+      <div class="form-container">
+        <el-form ref="form" :model="form" :rules="rules" label-width="100px">
+          <el-row>
+            <el-col :span="12">
+              <el-form-item label="公告标题" prop="noticeTitle">
+                <el-input v-model="form.noticeTitle" placeholder="请输入公告标题" />
+              </el-form-item>
+            </el-col>
+            <el-col :span="12">
+              <el-form-item label="状态">
+                <el-radio-group v-model="form.status">
+                  <el-radio v-for="dict in dict.type.sys_notice_status" :key="dict.value" :label="dict.value">{{dict.label}}</el-radio>
+                </el-radio-group>
+              </el-form-item>
+            </el-col>
+            <el-col :span="24">
+              <el-form-item label="内容">
+                <editor v-model="form.noticeContent" :min-height="192"/>
+              </el-form-item>
+            </el-col>
+            <!--          <el-col :span="24">-->
+            <!--            <el-form-item label="归属供应商">-->
+            <!--              <el-input v-model="form.deptName" disabled/>-->
+            <!--            </el-form-item>-->
+            <!--          </el-col>-->
+
+            <el-col :span="24">
+              <el-form-item label="归属供应商" prop="deptId">
+                <el-checkbox-group v-model="deptIdArr" @change="handleDeptChange">
+                  <el-checkbox v-for="item in deptNameList" :key="item.deptId" :label="item.deptId">
+                    {{ item.deptName }}
+                  </el-checkbox>
+                </el-checkbox-group>
+              </el-form-item>
+            </el-col>
+
+            <el-col :span="24">
+              <el-form-item label="创建人">
+                <el-input :value="getNickNameByUserName(form.createBy, userList)" disabled/>
+              </el-form-item>
+            </el-col>
+          </el-row>
+        </el-form>
+      </div>
       <div slot="footer" class="dialog-footer">
         <el-button type="primary" @click="submitForm">确 定</el-button>
         <el-button @click="cancel">取 消</el-button>
@@ -108,6 +104,7 @@
 import { listNotice, getNotice, delNotice, addNotice, updateNotice } from "@/api/system/notice";
 import { getNickNameByUserName } from "@/utils/ruoyi";
 import {listUserKv} from "@/api/system/user";
+import {selectLevel2DeptName} from "@/api/system/dept";
 
 export default {
   name: "Notice",
@@ -151,12 +148,17 @@ export default {
         noticeType: [
           { required: true, message: "公告类型不能为空", trigger: "change" }
         ]
-      }
+      },
+
+      // 供应商多选
+      deptIdArr: [],
+      deptNameList: [], // 部门名称
     };
   },
   created() {
     this.getList();
     this.getUserList();
+    this.getDeptDataList();
   },
   methods: {
     getNickNameByUserName,
@@ -164,6 +166,12 @@ export default {
     getUserList() {
       listUserKv().then(response => this.userList = response.data)
     },
+
+    /** 查询全部供应商，多级的按照/拼接 */
+    getDeptDataList() {
+      selectLevel2DeptName().then(response => this.deptNameList = response.data)
+    },
+
     /** 查询公告列表 */
     getList() {
       this.loading = true;
@@ -187,6 +195,7 @@ export default {
         noticeContent: undefined,
         status: "0"
       };
+      this.deptIdArr = [];
       this.resetForm("form");
     },
     /** 搜索按钮操作 */
@@ -205,6 +214,14 @@ export default {
       this.single = selection.length!=1
       this.multiple = !selection.length
     },
+
+    // 供应商选择
+    handleDeptChange(val) {
+      const selectedItems = this.deptNameList.filter(d => val.includes(d.deptId));
+      this.form.deptName = selectedItems.map(d => d.deptName).join(','); // 只处理名称
+      this.form.deptId = selectedItems.map(d => d.deptId).join(','); // 只处理id
+    },
+
     /** 新增按钮操作 */
     handleAdd() {
       this.reset();
@@ -222,6 +239,13 @@ export default {
         this.form = response.data;
         this.open = true;
         this.title = "修改公告";
+
+        // ⚡ deptId 兼容处理（后端返回可能是 null / "" / "1,2,3"）
+        if (this.form.deptId) {
+          this.deptIdArr = this.form.deptId.split(',').map(id => Number(id)) // 保证是数组
+        } else {
+          this.deptIdArr = [] // 默认空数组，避免报错
+        }
       });
     },
     /** 提交按钮 */
@@ -257,3 +281,16 @@ export default {
   }
 };
 </script>
+
+<style scoped lang="scss">
+
+.custom-dialog ::v-deep .el-dialog:not(.is-fullscreen){
+  margin-top: 3vh !important;
+}
+.form-container {
+  max-height: 80vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+</style>

@@ -72,6 +72,16 @@ public class SysUserController extends BaseController
     }
 
     /**
+     * 查询自己部门下的用户，包含当前部门
+     */
+    @GetMapping("/listUserKvSubDept")
+    public AjaxResult listUserKvSubDept(SysUser user)
+    {
+        List<SysUser> list = userService.listUserKvSubDept(user);
+        return success(list);
+    }
+
+    /**
      * 根据用户编号获取详细信息
      */
     @GetMapping(value = { "/", "/{userId}" })
@@ -224,6 +234,15 @@ public class SysUserController extends BaseController
     public AjaxResult deptTree(SysDept dept)
     {
         return success(deptService.selectDeptTreeList(dept));
+    }
+
+    /**
+     * 获取自己部门，以及当前部门
+     */
+    @GetMapping("/deptTreeSelectSubDept")
+    public AjaxResult deptTreeSelectSubDept(SysDept dept)
+    {
+        return success(deptService.selectSubDeptTreeList(dept));
     }
 
 

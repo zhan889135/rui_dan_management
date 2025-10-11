@@ -16,3 +16,12 @@ export function forceLogout(tokenId) {
     method: 'delete'
   })
 }
+
+// 查询全部在线用户列表
+export function allOnlineList(query) {
+  return request({
+    url: '/monitor/online/allOnlineList',
+    method: 'get',
+    params: query
+  })
+}

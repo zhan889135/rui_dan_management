@@ -169,4 +169,9 @@ public interface ISysUserService
     String importUser(List<SysUserImport> userList, Boolean isUpdateSupport, String operName);
 
     List<SysUser> selectUserKvList(SysUser user);
+
+    /**
+     * 查询自己部门下的用户，包含当前部门
+     */
+    List<SysUser> listUserKvSubDept(SysUser user);
 }

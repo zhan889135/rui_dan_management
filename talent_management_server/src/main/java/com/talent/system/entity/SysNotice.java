@@ -31,7 +31,7 @@ public class SysNotice extends BaseEntity
     private String status;
 
     /** 供应商id */
-    private Integer deptId;
+    private String deptId;
 
     /** 供应商名称 */
     private String deptName;
