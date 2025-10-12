@@ -11,3 +11,21 @@ git config --global https.proxy 'proxy-url'
 删除代理：
 git config --global --unset http.proxy
 git config --global --unset https.proxy
+
+拉取代码：git clone https://github.com/zhan889135/rui_dan_management.git
+
+
+Ip地址查询：https://ip.cn/
+
+119.117.245.115/32
+/32 表示 精确到单个 IP 地址（只允许这一台设备访问）；
+119.117.245.115 是你当前电脑访问互联网时的 公网出口 IP；
+
+119.117.245.115/32
+
+http://36.213.0.185:8090/
+
+账号：
+admin 123456
+luanxiong 123456
+xuanxuan1 123456

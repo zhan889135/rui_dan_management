@@ -7,6 +7,8 @@ import com.talent.common.constant.HttpStatus;
 import com.talent.common.controller.BaseController;
 import com.talent.common.domain.AjaxResult;
 import com.talent.common.page.TableDataInfo;
+import com.talent.common.utils.SecurityUtils;
+import com.talent.interview.utils.DeptPermissionUtil;
 import com.talent.system.config.annotation.Log;
 import com.talent.system.entity.SysUserOnline;
 import com.talent.system.entity.login.LoginUser;
@@ -62,16 +64,24 @@ public class SysUserOnlineController extends BaseController
     @GetMapping("/allOnlineList")
     public AjaxResult AllOnlineList(String ipaddr, String userName)
     {
+
         List<SysUserOnline> userOnlineList = SysUtil.searchOnlineUser(ipaddr, userName, redisCache, userOnlineService);
+
+        // 获取当前部门及其所有子部门 ID
+        List<Long> deptIds = DeptPermissionUtil.getDeptAndChildrenIds(SecurityUtils.getDeptId());
 
         // 过滤去重
         List<SysUserOnline> distinctList = userOnlineList.stream()
-                .filter(Objects::nonNull)  // 过滤掉null对象
+                .filter(Objects::nonNull) // 过滤 null
+                // ✅ 新增：只保留部门 ID 在 deptIds 集合中的用户
+                .filter(user -> user.getDeptId() != null && deptIds.contains(user.getDeptId()))
                 .collect(Collectors.collectingAndThen(
                         Collectors.toCollection(() ->
+                                // ✅ 按用户名去重
                                 new TreeSet<>(Comparator.comparing(SysUserOnline::getUserName))),
                         ArrayList::new
                 ));
+
         return AjaxResult.success(distinctList);
     }
 }

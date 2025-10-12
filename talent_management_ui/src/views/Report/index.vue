@@ -78,6 +78,11 @@
         <el-table-column label="面试日期" align="center" prop="interviewDate" width="150" show-overflow-tooltip/>
         <el-table-column label="面试时间" align="center" prop="interviewTime" width="150" show-overflow-tooltip/>
         <el-table-column label="招聘人" align="center" prop="createName" width="100" show-overflow-tooltip/>
+        <el-table-column label="创建时间" align="center" prop="createTime" width="100">
+          <template slot-scope="scope">
+            <span>{{ parseTime(scope.row.createTime, '{y}-{m}-{d}') }}</span>
+          </template>
+        </el-table-column>
         <el-table-column label="操作" align="center" class-name="small-padding fixed-width" width="200" fixed="right">
           <template slot-scope="{ row }" >
             <el-button size="mini" type="text" icon="el-icon-view" @click="handleView(row)" v-hasPermi="['interview:report:view']">查看</el-button>

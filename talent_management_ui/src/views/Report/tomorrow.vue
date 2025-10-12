@@ -66,10 +66,10 @@
         </el-table-column>
       </el-table>
     </div>
-    <pagination v-show="total>0" :total="total" :page.sync="queryParams.pageNum" :limit.sync="queryParams.pageSize" @pagination="getList"/>
+    <pagination v-show="total>0" :total="total" :page.sync="queryParams.pageNum" :limit.sync="queryParams.pageSize" @pagination="getList()"/>
 
     <!-- 详情 -->
-    <DetailDialog ref="detailDialog" @refresh="getList" @close="handleClose" :dict-map="dict.type" :user-list="userList"/>
+    <DetailDialog ref="detailDialog" @refresh="getList()" @close="handleClose" :dict-map="dict.type" :user-list="userList"/>
 
   </div>
 </template>

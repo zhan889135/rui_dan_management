@@ -247,12 +247,6 @@ export default {
     }
   },
 
-  computed: {
-    // 登录人部门等级
-    deptLevel() {
-      return this.$store?.state?.user?.deptLevel || 0  // 兜底为0
-    }
-  },
   methods: {
     getNickNameByUserName,
     /** 打开新增弹窗 */

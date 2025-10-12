@@ -11,6 +11,9 @@ public class SysUserOnline
     /** 会话编号 */
     private String tokenId;
 
+    /** 部门Id */
+    private Long deptId;
+
     /** 部门名称 */
     private String deptName;
 
