@@ -81,7 +81,7 @@
               <el-table-column label="招聘人" align="center" prop="createBy" width="200">
                 <template slot-scope="{ row }"><span>{{ getNickNameByUserName(row.createBy, userList) }}</span></template>
               </el-table-column>
-              <el-table-column prop="weekCount" align="center" label="本周邀约量"></el-table-column>
+<!--              <el-table-column prop="weekCount" align="center" label="本周邀约量"></el-table-column>-->
               <el-table-column prop="monthCount" align="center" label="本月邀约量"></el-table-column>
             </el-table>
           </div>
@@ -94,7 +94,7 @@
           <div class="notice-container">
             <div class="notice-frame" v-for="(item, index) in sysNoticeData" :key="index" v-loading="sysNoticeLoading">
               <div class="notice-head">
-                <div>{{item.deptName}}</div>
+<!--                <div>{{item.deptName}}</div>-->
                 <div>{{ parseTime(item.createTime) }}</div>
               </div>
               <div class="notice-type">{{item.noticeTitle}}</div>

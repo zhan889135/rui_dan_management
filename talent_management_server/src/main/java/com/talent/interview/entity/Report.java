@@ -28,6 +28,12 @@ public class Report extends BaseEntity {
     /** 供应商名称 */
     private String deptName;
 
+    /** 分支id */
+    private Integer subDeptId;
+
+    /** 分支名称 */
+    private String subDeptName;
+
     /** 面试点位id */
     private Integer locationId;
 

@@ -48,7 +48,9 @@
           </el-col>
           <el-col :span="12">
             <el-form-item label="面试时间" prop="interviewTime">
-               <el-time-picker v-model="form.interviewTime" value-format="HH:mm" format="HH:mm" style="width: 100%;" placeholder="请选择面试时间"></el-time-picker>
+              <el-select v-model="form.interviewTime" placeholder="请选择面试时间" style="width: 100%;">
+                <el-option v-for="time in timeOptions" :key="time.value" :label="time.label" :value="time.value"/>
+              </el-select>
             </el-form-item>
           </el-col>
           <el-col :span="24">
@@ -58,7 +60,7 @@
           </el-col>
           <el-col :span="12" v-if="deptLevel === 1">
             <el-form-item label="归属供应商">
-              <el-input v-model="form.deptName" disabled/>
+              <el-input v-model="form.subDeptName" disabled/>
             </el-form-item>
           </el-col>
           <el-col :span="12">
@@ -110,6 +112,8 @@ export default {
         id:undefined,
         deptId:undefined,
         deptName:undefined,
+        subDeptId:undefined,
+        subDeptName:undefined,
         locationId:undefined,
         locationName:undefined,
         name:undefined,
@@ -127,7 +131,7 @@ export default {
         locationId: [{ required: true, message: '请选择面试点位', trigger: 'change' }],
         name: [{ required: true, message: '请输入姓名', trigger: 'blur' }],
         phone: [{ required: true, message: '请输入电话', trigger: 'blur' },
-            { pattern: /^1[3-9]\d{9}$/, message: '请输入正确的手机号码', trigger: 'blur' }
+          { pattern: /^1[3-9]\d{9}$/, message: '请输入正确的手机号码', trigger: 'blur' },
         ],
         age: [
             { required: true, message: '请输入年龄', trigger: 'blur' },
@@ -140,7 +144,10 @@ export default {
 
       // 登录人部门权限
       deptLevel: this.$store?.state?.user?.deptLevel || 0,
-    }
+
+      // 时间选项：09:00, 09:30, ..., 17:00
+      timeOptions: []
+    };
   },
   methods: {
     getNickNameByUserName,
@@ -149,9 +156,10 @@ export default {
       this.title = '新增'
       this.resetForm()
       this.$set(this.form, 'interviewDate', this.$dayjs().add(1, 'day').format('YYYY-MM-DD')); // 面试日期默认第二天
-      this.$set(this.form, 'deptId', this.$store.state.user.deptId);
-      this.$set(this.form, 'deptName', this.$store.state.user.deptName);
+      this.$set(this.form, 'subDeptId', this.$store.state.user.deptId);
+      this.$set(this.form, 'subDeptName', this.$store.state.user.deptName);
       this.$set(this.form, 'createBy', this.$store.state.user.userName);
+      this.timeOptions = this.generateTimeOptions();
       this.visible = true
     },
 
@@ -161,6 +169,7 @@ export default {
       this.visible = true
       this.resetForm()
       this.loading = true;
+      this.timeOptions = this.generateTimeOptions();
       getInfo(id).then(response => {
         this.form = response.data
       }).finally(() =>{
@@ -197,7 +206,7 @@ export default {
     resetForm() {
       Object.assign(this.form, this.$options.data().form);
       this.$refs.form && this.$refs.form.clearValidate();
-      this.$refs.contentRecognition && this.$refs.contentRecognition.clear();
+      // this.$refs.contentRecognition && this.$refs.contentRecognition.clear();
     },
 
     /** 获取面试点位名称 */
@@ -212,8 +221,54 @@ export default {
         if (val[key] !== undefined && val[key] !== null && val[key] !== '') {
           this.$set(this.form, key, val[key])
         }
-      })
-    }
+      });
+      // ✅ 特别处理：如果传入了 phone，进行清洗和校验
+      this.cleanPhone();
+    },
+
+    // 时间选项
+    generateTimeOptions() {
+      const options = [];
+      let hour = 9;  // 从 9 点开始
+      let minute = 0;
+
+      // 循环生成时间，直到 17:00
+      while (hour < 17 || (hour === 17 && minute === 0)) {
+        const time = `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
+        options.push({
+          label: time,
+          value: time
+        });
+
+        // 每次加 30 分钟
+        minute += 30;
+        if (minute === 60) {
+          minute = 0;
+          hour++;
+        }
+      }
+
+      return options;
+    },
+
+    /**
+     * 清理手机号：批量替换指定内容
+     */
+    cleanPhone() {
+      if (!this.form.phone) return '';
+
+      let cleaned = this.form.phone;
+
+      cleaned = cleaned.replace(/\s+/g, '');      // 去掉所有空格
+      cleaned = cleaned.replace('(+86)', '');     // 先替换完整的(+86)
+      cleaned = cleaned.replace('（+86）', '');   // 先替换完整的（+86）
+      cleaned = cleaned.replace('(86)', '');      // 替换(86)
+      cleaned = cleaned.replace('（86）', '');    // 替换（86）
+      cleaned = cleaned.replace('+86', '');       // 最后替换单独的+86
+
+      this.form.phone = cleaned;
+    },
+
   },
 }
 </script>

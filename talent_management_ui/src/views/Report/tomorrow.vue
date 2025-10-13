@@ -43,23 +43,26 @@
     <div class="table-wrapper-self">
       <!-- 表格展示区域 -->
       <el-table v-loading="loading" :data="dataSource" stripe>
-        <el-table-column label="面试点位" align="center" prop="locationName" show-overflow-tooltip/>
         <el-table-column label="归属供应商" align="center" prop="deptName" width="200" show-overflow-tooltip v-if="deptLevel === 1"/>
+        <el-table-column label="面试点位" align="center" prop="locationName" show-overflow-tooltip/>
         <el-table-column label="姓名" align="center" prop="name" width="100" show-overflow-tooltip/>
         <el-table-column label="性别" align="center" prop="sex" width="50" show-overflow-tooltip>
           <template slot-scope="scope"><dict-tag :options="dict.type.sys_user_sex" :value="scope.row.sex"/></template>
         </el-table-column>
-        <el-table-column label="电话" align="center" prop="phone" width="150" show-overflow-tooltip/>
         <el-table-column label="年龄" align="center" prop="age" width="100" show-overflow-tooltip/>
         <el-table-column label="学历" align="center" prop="education" width="100" show-overflow-tooltip>
           <template slot-scope="scope"><dict-tag :options="dict.type.sys_education" :value="scope.row.education"/></template>
         </el-table-column>
         <el-table-column label="面试日期" align="center" prop="interviewDate" width="150" show-overflow-tooltip/>
         <el-table-column label="面试时间" align="center" prop="interviewTime" width="150" show-overflow-tooltip/>
-        <el-table-column label="招聘人" align="center" prop="createBy" width="100" show-overflow-tooltip>
-          <template slot-scope="{ row }"><span>{{ getNickNameByUserName(row.createBy, userList) }}</span></template>
+        <el-table-column label="电话" align="center" prop="phone" width="150" show-overflow-tooltip/>
+        <el-table-column label="招聘人" align="center" prop="createName" width="100" show-overflow-tooltip/>
+        <el-table-column label="创建时间" align="center" prop="createTime" width="150">
+          <template slot-scope="scope">
+            <span>{{ parseTime(scope.row.createTime) }}</span>
+          </template>
         </el-table-column>
-        <el-table-column label="操作" align="center" class-name="small-padding fixed-width" width="200" fixed="right">
+        <el-table-column label="操作" align="center" class-name="small-padding fixed-width" width="100" fixed="right">
           <template slot-scope="{ row }" >
             <el-button size="mini" type="text" icon="el-icon-view" @click="handleView(row)" v-hasPermi="['interview:tomorrow:view']">查看</el-button>
           </template>
@@ -77,7 +80,7 @@
 <script>
 import { list } from "@/api/report";
 import DetailDialog from "@/views/Report/detail.vue";
-import { getNickNameByUserName } from "@/utils/ruoyi";
+import {getNickNameByUserName, parseTime} from "@/utils/ruoyi";
 import {listUserKv} from "@/api/system/user";
 import {tomorrowReportCount} from "@/api/homePage";
 
@@ -123,6 +126,7 @@ export default {
     this.getTomorrowReportCount();
   },
   methods: {
+    parseTime,
     getNickNameByUserName,
     /** 查询用户列表 */
     getUserList() {
@@ -130,7 +134,7 @@ export default {
     },
     /** 获取第二天面试人员总数 */
     getTomorrowReportCount() {
-      tomorrowReportCount({interviewDate: this.$dayjs().add(1, 'day').format('YYYY-MM-DD')}).then(response => this.tomorrowReportCountList = response.data)
+      tomorrowReportCount({...this.queryParams,interviewDate: this.$dayjs().add(1, 'day').format('YYYY-MM-DD')}).then(response => this.tomorrowReportCountList = response.data)
     },
     /** 查询列表 */
     getList(locationId) {
@@ -150,6 +154,7 @@ export default {
     handleQuery() {
       this.queryParams.pageNum = 1;
       this.getList();
+      this.getTomorrowReportCount();
     },
     /** 重置按钮操作 */
     resetQuery() {
@@ -168,6 +173,7 @@ export default {
     /** 卡片点击 */
     handleCardClick(item) {
       this.queryParams.pageNum = 1;
+      this.queryParams.locationName = item.label;
       this.getList(item.key); // 把 id 传给 getList
     },
   }

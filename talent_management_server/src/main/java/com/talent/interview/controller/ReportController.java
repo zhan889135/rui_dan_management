@@ -77,4 +77,12 @@ public class ReportController extends BaseController {
         ExcelUtil<Report> util = new ExcelUtil<>(Report.class);
         util.exportExcel(response, list, "面试报备");
     }
+
+    /**
+     * 人员到达现场,推送至人员报备
+     */
+    @PostMapping("/personToFeedback")
+    public AjaxResult personToFeedback(@RequestBody Report entity) {
+        return service.personToFeedback(entity);
+    }
 }

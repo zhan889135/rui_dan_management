@@ -11,6 +11,7 @@
 
 <script>
 import iframeToggle from "./IframeToggle/index"
+import {stopBlinkTitle} from "@/utils/ruoyi";
 
 export default {
   name: 'AppMain',
@@ -30,12 +31,36 @@ export default {
   },
   mounted() {
     this.addIframe()
+    // ✅ 用户首次点击页面后自动解锁音频播放
+    document.addEventListener('click', this.initAudioUnlock, { once: true });
+
+    // 页签标题闪烁
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden) {
+        // 页面重新可见时，停止闪烁
+        stopBlinkTitle()
+      }
+    })
   },
   methods: {
     addIframe() {
       const {name} = this.$route
       if (name && this.$route.meta.link) {
         this.$store.dispatch('tagsView/addIframeView', this.$route)
+      }
+    },
+
+    initAudioUnlock() {
+      try {
+        const audio = new Audio(require('@/assets/mp3/4089.wav'));
+        audio.muted = true;   // 🔇 静音播放一次
+        audio.play().then(() => {
+          console.log('%c音频播放权限已解锁 ✅', 'color: #4CAF50');
+        }).catch((err) => {
+          console.warn('音频权限解锁失败：', err);
+        });
+      } catch (e) {
+        console.error('初始化音频失败：', e);
       }
     }
   }

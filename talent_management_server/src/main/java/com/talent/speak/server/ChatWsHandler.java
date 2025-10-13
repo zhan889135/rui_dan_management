@@ -70,8 +70,9 @@ public class ChatWsHandler extends SimpleChannelInboundHandler<TextWebSocketFram
             String content = json.get("content").asText();
 
             Date now = new Date();
+            ChatMessage chatMessage = new ChatMessage(null, groupId, userId, content, now);
             // 插入数据库
-            messageMapper.insert(new ChatMessage(null, groupId, userId, content, now));
+            messageMapper.insert(chatMessage);
 
             // ✅ 这里直接标记当前用户在这个群的最新已读位置
             // ✅ 自己发消息时直接标记已读
@@ -102,6 +103,7 @@ public class ChatWsHandler extends SimpleChannelInboundHandler<TextWebSocketFram
                 msg.put("groupId", groupId);
                 msg.put("from", userId);
                 msg.put("content", content);
+                msg.put("id", chatMessage.getId());
                 cg.writeAndFlush(new TextWebSocketFrame(mapper.writeValueAsString(msg)));
             }
 
@@ -111,9 +113,31 @@ public class ChatWsHandler extends SimpleChannelInboundHandler<TextWebSocketFram
                 if (gid == null || !gid.equals(groupId)) {
                     ObjectNode unread = mapper.createObjectNode();
                     unread.put("type", "unread");
+                    unread.put("from", userId);
                     unread.put("groupId", groupId);
                     ch.writeAndFlush(new TextWebSocketFrame(mapper.writeValueAsString(unread)));
                 }
+            }
+        }
+        else if ("deleteMessage".equals(type)) {
+            String groupId = ctx.channel().attr(AttributeKey.valueOf("gid")).get() != null
+                    ? ctx.channel().attr(AttributeKey.valueOf("gid")).get().toString()
+                    : json.get("groupId").asText();
+            String userId = ctx.channel().attr(AttributeKey.valueOf("uid")).get().toString();
+            String content = json.get("content").asText();
+
+            // 插入数据库
+            messageMapper.deleteById(content);
+
+            // 群发
+            ChannelGroup cg = groups.get(groupId);
+            if (cg != null) {
+                ObjectNode msg = mapper.createObjectNode();
+                msg.put("type", "deleteMessage");
+                msg.put("groupId", groupId);
+                msg.put("from", userId);
+                msg.put("content", "已撤回");
+                cg.writeAndFlush(new TextWebSocketFrame(mapper.writeValueAsString(msg)));
             }
         }
     }

@@ -30,4 +30,9 @@ public interface ReportService {
      * 删除
      */
     AjaxResult delete(Long[] ids);
+
+    /**
+     * 人员到达现场,推送至人员报备
+     */
+    AjaxResult personToFeedback(Report entity);
 }

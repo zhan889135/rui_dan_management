@@ -36,9 +36,19 @@ export function getInfo(id) {
 }
 
 // 查询全部
-export function listAll() {
+// export function listAll() {
+//   return request({
+//     url: '/interview/report/allList',
+//     method: 'get',
+//   })
+// }
+
+
+// 保存或更新
+export function personToFeedback(data) {
   return request({
-    url: '/interview/report/allList',
-    method: 'get',
+    url: '/interview/report/personToFeedback',
+    method: 'post',
+    data: data
   })
 }

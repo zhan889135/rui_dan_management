@@ -13,7 +13,11 @@ import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.TemporalAdjusters;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class DateUtils extends org.apache.commons.lang3.time.DateUtils{
 
@@ -160,16 +164,6 @@ public class DateUtils extends org.apache.commons.lang3.time.DateUtils{
     /** 周期起止封装 record会自动生成构造器、getter、equals、hashCode、toString  */
     public record WeekRange(Date startDate, Date endDate) { }
 
-    /** 本周区间（已写好的，留作参考） */
-    public static WeekRange getWeekRange(Date date) {
-        return buildRange(date, 0);  // 0 表示这周
-    }
-
-    /** 上周区间 */
-    public static WeekRange getPreviousWeekRange(Date date) {
-        return buildRange(date, -1); // -1 表示上一周
-    }
-
     /*================================================================
      * 内部通用构造方法：offset 为 0 = 本周，-1 = 上周，1 = 下周...
      *================================================================*/
@@ -192,6 +186,5 @@ public class DateUtils extends org.apache.commons.lang3.time.DateUtils{
 
         return new WeekRange(start, end);
     }
-
 
 }

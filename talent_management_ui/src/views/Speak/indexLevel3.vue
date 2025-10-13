@@ -63,7 +63,7 @@
                           </div>
                         </template>
                         <template v-else>
-                          {{ m.content }}
+                          <div class="content-back">{{ m.content }}</div>
                         </template>
                       </div>
                       <!-- 发送时间 -->
@@ -85,11 +85,14 @@
                           </div>
                         </template>
                         <template v-else>
-                          {{ m.content }}
+                          <div class="content-back">{{ m.content }}</div>
                         </template>
                       </div>
-                      <!-- 发送时间 -->
-                      <span class="msg-time">{{ m.time }}</span>
+                      <!-- 时间和撤回按钮 -->
+                      <div class="msg-footer">
+                        <span class="msg-time">{{ m.time }}</span>
+                        <i class="el-icon-refresh-right withdraw-icon" @click="withdrawMessage(m.id)"></i>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -103,8 +106,9 @@
               </el-dialog>
 
               <!-- 输入框 -->
-              <div class="chat-input">
-                <el-input v-model="inputMsg" placeholder="输入消息后回车或点击发送" @keyup.enter.native="sendMessage()"></el-input>
+              <div class="chat-input" @paste="handlePaste">
+                <el-input v-model="inputMsg" type="textarea" placeholder="输入消息后点击发送" maxlength="500"></el-input>
+<!--                <el-input v-model="inputMsg" placeholder="输入消息后回车或点击发送" @keyup.enter.native="sendMessage()"></el-input>-->
                 <!-- 表情选择器 -->
                 <el-popover placement="top" trigger="hover" width="350">
                   <div class="emoji-panel">
@@ -165,7 +169,15 @@
         </el-card>
         <!-- 今日邀约明细 -->
         <el-card style="padding: 0">
-          <div slot="header" class="card-header"> <span class="card-title">邀约明细</span></div>
+          <div slot="header" class="card-header">
+            <span class="card-title">邀约明细</span>
+            <!-- 查询输入框区域 -->
+            <div class="card-actions">
+              <el-input v-model="queryParams.name" placeholder="姓名" size="small" clearable style="width: 120px; margin-right: 8px;" @keyup.enter.native="getInvitationInfo()"/>
+              <el-input v-model="queryParams.phone" placeholder="电话" size="small" clearable style="width: 140px; margin-right: 8px;" @keyup.enter.native="getInvitationInfo()"/>
+              <el-tooltip effect="dark" content="查询" placement="top"><i class="el-icon-search" @click="getInvitationInfo()"></i></el-tooltip>
+            </div>
+          </div>
           <div class="table-wrapper-self">
             <el-table stripe :data="invitationInfoData" v-loading="invitationInfoLoading" height="368">
               <el-table-column type="index" label="序号" width="50" align="center"/>
@@ -183,10 +195,11 @@
                   <dict-tag :options="dict.type.sys_education" :value="scope.row.education"/>
                 </template>
               </el-table-column>
-              <el-table-column label="操作" align="center" class-name="small-padding fixed-width" width="50" fixed="right">
+              <el-table-column label="操作" align="center" class-name="small-padding fixed-width" width="90" fixed="right">
                 <template slot-scope="{ row }" >
                   <el-button size="mini" type="text" icon="el-icon-edit" @click="handleUpdate(row)"/>
                   <el-button size="mini" type="text" icon="el-icon-delete" @click="handleDelete(row)"/>
+                  <el-button size="mini" type="text" icon="el-icon-copy-document" @click="handleCopy(row)"/>
                 </template>
               </el-table-column>
             </el-table>
@@ -205,13 +218,21 @@
 <script>
 import {groupList, getHistory, markRead, selectInvitationInfo, saveInvitationInfo} from '@/api/speak'
 import { listUserKv } from "@/api/system/user";
-import {getNickNameByUserId, getNickNameByUserName, parseTime} from "@/utils/ruoyi";
+import {
+  getNickNameByUserId,
+  getNickNameByUserName,
+  parseTime,
+  playAudio,
+  startBlinkTitle,
+  stopBlinkTitle
+} from "@/utils/ruoyi";
 import { getToken } from "@/utils/auth";
 import ContentRecognition from "@/components/ContentRecognition/indexSpeak.vue";
 import {save} from "@/api/report";
 import {delData} from "@/api/feedback";
 import EditDialog from "@/views/Feedback/edit.vue";
 import {allListNoDept} from "@/api/location";
+import axios from "axios";
 
 export default {
   name: 'SpeakLevel3',
@@ -262,6 +283,12 @@ export default {
       saveInvitationLoading: false,
 
       locationList: [], // 查询点位名称
+
+      // 邀约明细查询项
+      queryParams: {
+        name: '',
+        phone: ''
+      },
     }
   },
   watch: {
@@ -284,6 +311,7 @@ export default {
     this.getLocationList()           // 查询面试点位
   },
   methods: {
+
     getNickNameByUserName,
     parseTime,
     getNickNameByUserId,
@@ -296,7 +324,9 @@ export default {
       this.invitationInfoLoading = true;
       selectInvitationInfo({
         interviewDate: this.$dayjs().format('YYYY-MM-DD'),
-        createBy: this.$store.state.user.userName
+        createBy: this.$store.state.user.userName,
+        name: this.queryParams.name || '',
+        phone: this.queryParams.phone || ''
       })
         .then(res => (this.invitationInfoData = res.data || []))
         .finally(() => (this.invitationInfoLoading = false));
@@ -327,7 +357,8 @@ export default {
       this.messages = res.data.map(m => ({
         from: m.fromUser,
         content: m.content,
-        time: m.sendTime
+        time: m.sendTime,
+        id: m.id
       }))
 
       // 进入群再发送join
@@ -348,6 +379,9 @@ export default {
       // 本地把该群未读清0（UI 立即响应；刷新后也会被后端覆盖为0）
       const idx = this.groups.findIndex(x => x.id + '' === id + '')
       if (idx > -1) this.$set(this.groups[idx], 'unreadCount', 0)
+
+      // 页面重新可见时，停止闪烁
+      stopBlinkTitle()
     },
 
     // 监听WebSocket  8096端口
@@ -367,7 +401,8 @@ export default {
           this.messages.push({
             from: msg.from,
             content: msg.content,
-            time: msg.time || new Date().toLocaleString()
+            time: msg.time || new Date().toLocaleString(),
+            id: msg.id
           })
           if (msg.content && msg.content.startsWith('http')) {
             await this.scrollAfterRender()
@@ -381,6 +416,24 @@ export default {
             const cur = this.groups[idx].unreadCount || 0
             this.$set(this.groups[idx], 'unreadCount', cur + 1)
           }
+          // ✅ 播放提示音
+          let userId1 = msg.from;
+          let userId2 = this.$store?.state?.user?.id;
+          // ✅ 判断是否自己发的消息（字符串和数字兼容）
+          if (String(userId1) !== String(userId2)) {
+            playAudio(); // ✅ 只播放别人发的消息
+            startBlinkTitle('【新消息】') // ✅ 启动页签闪烁
+          }
+        } else if (msg.type === 'deleteMessage') {
+          // 👇 重新再加载历史消息
+          getHistory(this.currentGroupId).then(response => {
+            this.messages = response.data.map(m => ({
+              from: m.fromUser,
+              content: m.content,
+              time: m.sendTime,
+              id: m.id
+            }))
+          });
         }
       }
     },
@@ -405,6 +458,57 @@ export default {
         .split(',')
         .filter(u => u) // 去空
         .map(u => ({ userId: u }))
+    },
+
+    // ⬇️ 处理粘贴事件 添加图片（支持微信截图Ctrl+V）
+    async handlePaste(e) {
+      const clipboardData = e.clipboardData || window.clipboardData;
+      if (!clipboardData) return;
+
+      const items = clipboardData.items;
+      if (!items) return;
+
+      for (let i = 0; i < items.length; i++) {
+        const item = items[i];
+
+        // ✅ 判断是否为图片类型
+        if (item.type.indexOf('image') !== -1) {
+          const file = item.getAsFile();
+          if (!file) return;
+
+          // ✅ 大小限制（可选）
+          if (file.size > 5 * 1024 * 1024) {
+            this.$message.warning('图片不能超过 5MB');
+            return;
+          }
+
+          // ✅ 构造上传 FormData
+          const formData = new FormData();
+          formData.append('file', file);               // 关键字段名必须匹配后端
+          formData.append('path', this.upload.uploadParams.path);
+
+          try {
+            // 直接调用你的统一上传接口
+            const res = await axios.post(this.upload.uploadUrl, formData, {
+              headers: {
+                ...this.upload.headers,                  // 保留 Authorization
+                'Content-Type': 'multipart/form-data'    // ✅ 明确声明类型
+              }
+            });
+
+            // ✅ 成功后调用你现有的 handleUploadSuccess
+            this.handleUploadSuccess(res.data);
+
+          } catch (error) {
+            console.error(error);
+            this.$message.error('图片上传失败');
+          }
+
+          // 阻止默认行为（防止输入框出现 [object File]）
+          e.preventDefault();
+          return;
+        }
+      }
     },
 
     // 压缩图片
@@ -449,7 +553,7 @@ export default {
 
         // ✅ 无条件替换掉 127.0.0.1，无论开发还是生产
         // 同时兼容 127.0.1.1 这种变体
-        newUrl = newUrl.replace(/127(?:\.\d+){3}/, process.env.VUE_APP_REPLACE_IP);
+        // newUrl = newUrl.replace(/127(?:\.\d+){3}/, process.env.VUE_APP_REPLACE_IP);
 
         this.sendMessage(newUrl);
       } else {
@@ -517,6 +621,9 @@ export default {
         }
       });
 
+      // ✅ 特别处理：如果传入了 phone，进行清洗和校验
+      this.cleanPhone();
+
       // 保存面试反馈信息
       saveInvitationInfo(this.speakForm).then((response) => {
         this.$modal.msgSuccess('保存成功')
@@ -524,6 +631,24 @@ export default {
         this.getInvitationInfo();
         this.saveInvitationLoading = false;
       })
+    },
+
+    /**
+     * 清理手机号：批量替换指定内容
+     */
+    cleanPhone() {
+      if (!this.speakForm.phone) return '';
+
+      let cleaned = this.speakForm.phone;
+
+      cleaned = cleaned.replace(/\s+/g, '');      // 去掉所有空格
+      cleaned = cleaned.replace('(+86)', '');     // 先替换完整的(+86)
+      cleaned = cleaned.replace('（+86）', '');   // 先替换完整的（+86）
+      cleaned = cleaned.replace('(86)', '');      // 替换(86)
+      cleaned = cleaned.replace('（86）', '');    // 替换（86）
+      cleaned = cleaned.replace('+86', '');       // 最后替换单独的+86
+
+      this.speakForm.phone = cleaned;
     },
 
     /** 修改按钮操作 */
@@ -542,6 +667,79 @@ export default {
         this.getInvitationInfo();
         this.$modal.msgSuccess("删除成功");
       }).catch(() => {});
+    },
+    /** 复制按钮 */
+    handleCopy(row) {
+      // 拼接多行文本
+      const text =
+        `姓名：${row.name || ''}\n` +
+        `性别：${row.sex || ''}\n` +
+        `电话：${row.phone || ''}\n` +
+        `年龄：${row.age || ''}\n` +
+        `学历：${row.education || ''}`;
+
+      // ✅ ① 设置到输入框（inputMsg）
+
+      // ① 设置到输入框
+      this.inputMsg = (this.inputMsg?.trim() ? this.inputMsg + '\n' : '') + text;
+
+      // ② 尝试现代API
+      if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(text).then(() => {
+          this.$modal.msgSuccess("内容已复制并写入输入框");
+        }).catch(() => this.copyFallback(text));
+      } else {
+        this.copyFallback(text);
+      }
+    },
+
+    copyFallback(text) {
+      const input = document.createElement('textarea');
+      input.value = text;
+      document.body.appendChild(input);
+      input.focus();
+      input.select();
+      try {
+        document.execCommand('copy');
+        this.$modal.msgSuccess("内容已复制并写入输入框");
+      } catch (err) {
+        this.$modal.msgError("浏览器不支持自动复制，请手动复制");
+      }
+      document.body.removeChild(input);
+    },
+
+    // 撤回按钮
+    async withdrawMessage(id) {
+      try {
+        await this.$confirm('确定要撤回这条消息吗？', '提示', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning'
+        });
+
+        // ✅ 发送撤回指令
+        this.ws.send(JSON.stringify({
+          type: 'deleteMessage',
+          content: id,
+          userId: this.userId,
+          groupId: this.currentGroupId
+        }));
+
+        this.$message.success('撤回成功');
+
+        // ✅ 重新加载历史消息
+        const res = await getHistory(this.currentGroupId);
+        this.messages = res.data.map(m => ({
+          from: m.fromUser,
+          content: m.content,
+          time: m.sendTime,
+          id: m.id
+        }));
+
+      } catch (err) {
+        // 用户点击取消或关闭对话框
+        this.$message.info('已取消撤回');
+      }
     },
   }
 }
@@ -833,6 +1031,7 @@ export default {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  margin-top: 15px;
 }
 
 .msg-content {
@@ -953,6 +1152,73 @@ export default {
 
 .emoji-item:hover {
   transform: scale(1.2); /* 悬浮放大 */
+}
+
+// 支持换行 背景颜色
+.content-back {
+  white-space: pre-wrap;
+  word-break: break-word;
+
+  background: #95ec69; /* 微信浅绿色 */
+  color: #000;
+  border-radius: 10px;
+  padding: 8px 12px;
+  display: inline-block;
+  position: relative;
+  line-height: 1.6;
+  transition: all 0.25s ease;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+
+/* hover 时更亮 + 阴影更柔 */
+.content-back:hover {
+  background: #8de15f;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+}
+
+/* 小三角形（气泡尾巴） */
+.content-back::before {
+  content: '';
+  position: absolute;
+  right: -6px;
+  top: 12px;
+  border-width: 6px;
+  border-style: solid;
+  border-color: transparent transparent transparent #95ec69;
+  transition: border-color 0.25s ease;
+}
+
+.content-back:hover::before {
+  border-color: transparent transparent transparent #8de15f;
+}
+
+// 撤回icon
+.withdraw-icon {
+  font-size: 16px;               /* 稍大一点更清晰 */
+  color: #b0b0b0;                /* 柔和的灰色 */
+  margin-left: 8px;
+  cursor: pointer;               /* 小手光标 */
+  transition: all 0.25s ease;    /* 平滑过渡 */
+  opacity: 0.7;                  /* 默认稍微淡一点 */
+  vertical-align: middle;        /* 和文字对齐 */
+}
+
+.withdraw-icon:hover {
+  color: #f56c6c;                /* Element Plus 风格的红色高亮 */
+  transform: scale(1.15);        /* 稍微放大 */
+  opacity: 1;                    /* 提高可见度 */
+}
+
+.withdraw-icon:active {
+  transform: scale(0.95);        /* 点击时轻微收缩反馈 */
+  color: #d9534f;                /* 深一点的红色 */
+}
+
+.msg-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  margin-top: 15px;
 }
 </style>
 

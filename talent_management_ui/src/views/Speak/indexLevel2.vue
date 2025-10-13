@@ -14,6 +14,7 @@
             <div class="group-list">
               <div class="group-actions">
                 <div class="button-grid">
+                  <a href="javascript:void(0)" class="blended-button" @click.prevent="showCreateGroupDialog = true">创建</a>
                   <a href="javascript:void(0)" class="blended-button" @click.prevent="refreshGroups">刷新</a>
                 </div>
               </div>
@@ -25,6 +26,11 @@
 
                   <!--未读数量-->
                   <span v-if="g.unreadCount && g.unreadCount>0" class="badge">{{ g.unreadCount }}</span>
+
+                  <div class="group-actions">
+                    <!-- 编辑按钮 -->
+                    <el-button type="text" size="mini" icon="el-icon-edit" @click.stop="editGroupName(g)" title="修改名称"></el-button>
+                  </div>
                 </li>
               </ul>
             </div>
@@ -65,7 +71,7 @@
                           </div>
                         </template>
                         <template v-else>
-                          {{ m.content }}
+                          <div class="content-back">{{ m.content }}</div>
                         </template>
                       </div>
                       <!-- 发送时间 -->
@@ -87,11 +93,14 @@
                           </div>
                         </template>
                         <template v-else>
-                          {{ m.content }}
+                          <div class="content-back">{{ m.content }}</div>
                         </template>
                       </div>
-                      <!-- 发送时间 -->
-                      <span class="msg-time">{{ m.time }}</span>
+                      <!-- 时间和撤回按钮 -->
+                      <div class="msg-footer">
+                        <span class="msg-time">{{ m.time }}</span>
+                        <i class="el-icon-refresh-right withdraw-icon" @click="withdrawMessage(m.id)"></i>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -105,8 +114,9 @@
               </el-dialog>
 
               <!-- 输入框 -->
-              <div class="chat-input">
-                <el-input v-model="inputMsg" placeholder="输入消息后回车或点击发送" @keyup.enter.native="sendMessage()"></el-input>
+              <div class="chat-input" @paste="handlePaste">
+                <el-input v-model="inputMsg" type="textarea" placeholder="输入消息后点击发送" maxlength="500"></el-input>
+                <!--                <el-input v-model="inputMsg" placeholder="输入消息后回车或点击发送" @keyup.enter.native="sendMessage()"></el-input>-->
                 <!-- 表情选择器 -->
                 <el-popover placement="top" trigger="hover" width="350">
                   <div class="emoji-panel">
@@ -136,6 +146,30 @@
           </div>
         </el-card>
       </div>
+
+      <!-- 创建群弹窗 -->
+      <el-dialog title="创建群" :visible.sync="showCreateGroupDialog" :close-on-click-modal="false" :close-on-press-escape="false" v-on="$listeners" class="custom-dialog create-group-dialog" width="30%" >
+        <el-form>
+          <el-form-item label="群名称"><el-input v-model="newGroupName" maxlength="50"></el-input></el-form-item>
+        </el-form>
+        <span slot="footer" class="dialog-footer">
+        <el-button @click="showCreateGroupDialog=false">取消</el-button>
+        <el-button type="primary" @click="createGroupHandler">创建</el-button>
+      </span>
+      </el-dialog>
+
+      <!-- 修改群弹窗 -->
+      <el-dialog title="修改群" :visible.sync="showEditNameDialog" :close-on-click-modal="false" :close-on-press-escape="false" v-on="$listeners" class="custom-dialog create-group-dialog" width="30%" >
+        <el-form>
+          <el-form-item label="新名称">
+            <el-input v-model="newGroupName" maxlength="50"></el-input>
+          </el-form-item>
+        </el-form>
+        <span slot="footer" class="dialog-footer">
+          <el-button @click="showEditNameDialog=false">取消</el-button>
+          <el-button type="primary" @click="confirmEditGroupName">保存</el-button>
+        </span>
+      </el-dialog>
 
       <!-- 添加用户弹窗 -->
       <el-dialog title="添加用户" :visible.sync="showAddUserDialog" :close-on-click-modal="false" :close-on-press-escape="false" v-on="$listeners" class="custom-dialog add-user-dialog" width="70%" >
@@ -186,7 +220,15 @@
         <!-- 今日部门邀约统计 -->
         <el-card style="padding: 0">
           <div slot="header" class="card-header">
-            <span class="card-title">邀约统计</span>
+            <!-- ✅ 新增一个容器，把标题和合计包在一起 -->
+            <div class="card-left">
+              <span class="card-title">邀约统计</span>
+              <span class="card-sum">
+                <i class="el-icon-s-data"></i>
+                今日合计：
+                <span class="sum-number">{{ invitationCountDataSum }}</span>
+              </span>
+            </div>
             <div class="card-actions">
               <!-- 刷新 -->
               <el-tooltip effect="dark" content="刷新" placement="top">
@@ -196,14 +238,22 @@
           </div>
           <div class="table-wrapper-self">
             <el-table stripe :data="invitationCountData" v-loading="invitationCountLoading" height="250">
-              <el-table-column prop="name" align="center" label="招聘部门"/>
+              <el-table-column prop="name" align="center" label="招聘人员"/>
               <el-table-column prop="count" align="center" label="今日邀约量"/>
             </el-table>
           </div>
         </el-card>
         <!-- 今日邀约明细 -->
         <el-card style="padding: 0">
-          <div slot="header" class="card-header"> <span class="card-title">邀约明细</span></div>
+          <div slot="header" class="card-header">
+            <span class="card-title">邀约明细</span>
+            <!-- 查询输入框区域 -->
+            <div class="card-actions">
+              <el-input v-model="queryParams.name" placeholder="姓名" size="small" clearable style="width: 120px; margin-right: 8px;" @keyup.enter.native="getInvitationInfo()"/>
+              <el-input v-model="queryParams.phone" placeholder="电话" size="small" clearable style="width: 140px; margin-right: 8px;" @keyup.enter.native="getInvitationInfo()"/>
+              <el-tooltip effect="dark" content="查询" placement="top"><i class="el-icon-search" @click="getInvitationInfo()"></i></el-tooltip>
+            </div>
+          </div>
           <div class="table-wrapper-self">
             <el-table stripe :data="invitationInfoData" v-loading="invitationInfoLoading" height="368">
               <el-table-column type="index" label="序号" width="50" align="center"/>
@@ -238,15 +288,16 @@ import {
   selectInvitationInfo,
   selectPeopleInvitationCount,
   removeMember,
-  addMember,
+  addMember, updateGroupName, createGroup as apiCreateGroup,
 } from '@/api/speak'
 import {deptTreeSelect, deptTreeSelectSubDept, listUserKv, listUserKvSubDept} from "@/api/system/user";
-import { getNickNameByUserId, parseTime } from "@/utils/ruoyi";
+import {getNickNameByUserId, parseTime, playAudio, startBlinkTitle, stopBlinkTitle} from "@/utils/ruoyi";
 import Treeselect from "@riophae/vue-treeselect";
 import "@riophae/vue-treeselect/dist/vue-treeselect.css";
 import { Splitpanes, Pane } from "splitpanes";
 import "splitpanes/dist/splitpanes.css";
 import { getToken } from "@/utils/auth";
+import axios from "axios";
 
 export default {
   name: 'SpeakLevel2',
@@ -267,6 +318,10 @@ export default {
 
       // 弹窗控制
       showAddUserDialog: false,           // 添加用户弹窗
+      showCreateGroupDialog: false,       // 添加聊天组弹窗
+      showEditNameDialog: false,          // 修改聊天组弹窗
+      editGroup: null,                    // 修改聊天组对象
+      newGroupName: '',                   // 修改聊天组名称
 
       // 聊天记录
       messagesLoading: false,             // 加载聊天内容
@@ -296,6 +351,7 @@ export default {
 
       // 今日邀约统计
       invitationCountData: [],
+      invitationCountDataSum: 0,
       invitationCountLoading: false,
 
       // 今日邀约明细
@@ -303,7 +359,13 @@ export default {
       invitationInfoLoading: false,
 
       // 表情
-      emojis: []
+      emojis: [],
+
+      // 邀约明细查询项
+      queryParams: {
+        name: '',
+        phone: ''
+      },
     }
   },
   watch: {
@@ -339,7 +401,15 @@ export default {
         interviewDate: this.$dayjs().format('YYYY-MM-DD'),
         deptId: this.$store.state.user.deptId
       })
-        .then(res => (this.invitationCountData = res.data || []))
+        .then(res => {
+          this.invitationCountData = res.data || [];
+
+          // ✅ 计算总和（注意 count 是字符串，要转数字）
+          this.invitationCountDataSum = this.invitationCountData.reduce(
+            (sum, item) => sum + Number(item.count || 0),
+            0
+          );
+        })
         .finally(() => (this.invitationCountLoading = false));
     },
     /** 查询邀约明细 */
@@ -347,7 +417,9 @@ export default {
       this.invitationInfoLoading = true;
       selectInvitationInfo({
         interviewDate: this.$dayjs().format('YYYY-MM-DD'),
-        deptId: this.$store.state.user.deptId
+        deptId: this.$store.state.user.deptId,
+        name: this.queryParams.name || '',
+        phone: this.queryParams.phone || ''
       })
         .then(res => (this.invitationInfoData = res.data || []))
         .finally(() => (this.invitationInfoLoading = false));
@@ -358,6 +430,34 @@ export default {
       // 后端返回 AjaxResult，要取 data
       const res = await groupList()
       this.groups = res.data || []
+    },
+
+    // 创建群
+    async createGroupHandler() {
+      await apiCreateGroup({ name: this.newGroupName })
+      this.showCreateGroupDialog = false
+      await this.refreshGroups()
+    },
+    // 修改群弹窗
+    editGroupName(group) {
+      this.editGroup = group;
+      this.newGroupName = group.name;
+      this.showEditNameDialog = true;
+    },
+    // 修改群
+    async confirmEditGroupName() {
+      if (!this.newGroupName) {
+        this.$message.warning('请输入新名称');
+        return;
+      }
+      // 调用你的后端接口修改名称
+      await updateGroupName({
+        id: this.editGroup.id,
+        name: this.newGroupName
+      });
+      this.showEditNameDialog = false;
+      this.newGroupName = '';
+      await this.refreshGroups();
     },
 
     // 选中群
@@ -374,7 +474,8 @@ export default {
       this.messages = res.data.map(m => ({
         from: m.fromUser,
         content: m.content,
-        time: m.sendTime
+        time: m.sendTime,
+        id: m.id
       }))
 
       // 进入群再发送join
@@ -395,6 +496,9 @@ export default {
       // 本地把该群未读清0（UI 立即响应；刷新后也会被后端覆盖为0）
       const idx = this.groups.findIndex(x => x.id + '' === id + '')
       if (idx > -1) this.$set(this.groups[idx], 'unreadCount', 0)
+
+      // 页面重新可见时，停止闪烁
+      stopBlinkTitle()
     },
 
     // 打开添加成员弹窗
@@ -465,7 +569,8 @@ export default {
           this.messages.push({
             from: msg.from,
             content: msg.content,
-            time: msg.time || new Date().toLocaleString()
+            time: msg.time || new Date().toLocaleString(),
+            id: msg.id
           })
           if (msg.content && msg.content.startsWith('http')) {
             await this.scrollAfterRender()
@@ -479,6 +584,24 @@ export default {
             const cur = this.groups[idx].unreadCount || 0
             this.$set(this.groups[idx], 'unreadCount', cur + 1)
           }
+          // ✅ 播放提示音
+          let userId1 = msg.from;
+          let userId2 = this.$store?.state?.user?.id;
+          // ✅ 判断是否自己发的消息（字符串和数字兼容）
+          if (String(userId1) !== String(userId2)) {
+            playAudio(); // ✅ 只播放别人发的消息
+            startBlinkTitle('【新消息】') // ✅ 启动页签闪烁
+          }
+        } else if (msg.type === 'deleteMessage') {
+          // 👇 重新再加载历史消息
+          getHistory(this.currentGroupId).then(response => {
+            this.messages = response.data.map(m => ({
+              from: m.fromUser,
+              content: m.content,
+              time: m.sendTime,
+              id: m.id
+            }))
+          });
         }
       }
     },
@@ -550,6 +673,57 @@ export default {
         });
     },
 
+    // ⬇️ 处理粘贴事件 添加图片（支持微信截图Ctrl+V）
+    async handlePaste(e) {
+      const clipboardData = e.clipboardData || window.clipboardData;
+      if (!clipboardData) return;
+
+      const items = clipboardData.items;
+      if (!items) return;
+
+      for (let i = 0; i < items.length; i++) {
+        const item = items[i];
+
+        // ✅ 判断是否为图片类型
+        if (item.type.indexOf('image') !== -1) {
+          const file = item.getAsFile();
+          if (!file) return;
+
+          // ✅ 大小限制（可选）
+          if (file.size > 5 * 1024 * 1024) {
+            this.$message.warning('图片不能超过 5MB');
+            return;
+          }
+
+          // ✅ 构造上传 FormData
+          const formData = new FormData();
+          formData.append('file', file);               // 关键字段名必须匹配后端
+          formData.append('path', this.upload.uploadParams.path);
+
+          try {
+            // 直接调用你的统一上传接口
+            const res = await axios.post(this.upload.uploadUrl, formData, {
+              headers: {
+                ...this.upload.headers,                  // 保留 Authorization
+                'Content-Type': 'multipart/form-data'    // ✅ 明确声明类型
+              }
+            });
+
+            // ✅ 成功后调用你现有的 handleUploadSuccess
+            this.handleUploadSuccess(res.data);
+
+          } catch (error) {
+            console.error(error);
+            this.$message.error('图片上传失败');
+          }
+
+          // 阻止默认行为（防止输入框出现 [object File]）
+          e.preventDefault();
+          return;
+        }
+      }
+    },
+
     // 压缩图片
     beforeUploadImage(file) {
       // 校验 MIME 类型
@@ -592,7 +766,7 @@ export default {
 
         // ✅ 无条件替换掉 127.0.0.1，无论开发还是生产
         // 同时兼容 127.0.1.1 这种变体
-        newUrl = newUrl.replace(/127(?:\.\d+){3}/, process.env.VUE_APP_REPLACE_IP);
+        // newUrl = newUrl.replace(/127(?:\.\d+){3}/, process.env.VUE_APP_REPLACE_IP);
 
         this.sendMessage(newUrl);
       } else {
@@ -649,7 +823,39 @@ export default {
     insertEmoji(emoji) {
       this.inputMsg += emoji; // 把选择的 emoji 插入输入框
     },
+    // 撤回按钮
+    async withdrawMessage(id) {
+      try {
+        await this.$confirm('确定要撤回这条消息吗？', '提示', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning'
+        });
 
+        // ✅ 发送撤回指令
+        this.ws.send(JSON.stringify({
+          type: 'deleteMessage',
+          content: id,
+          userId: this.userId,
+          groupId: this.currentGroupId
+        }));
+
+        this.$message.success('撤回成功');
+
+        // ✅ 重新加载历史消息
+        const res = await getHistory(this.currentGroupId);
+        this.messages = res.data.map(m => ({
+          from: m.fromUser,
+          content: m.content,
+          time: m.sendTime,
+          id: m.id
+        }));
+
+      } catch (err) {
+        // 用户点击取消或关闭对话框
+        this.$message.info('已取消撤回');
+      }
+    },
   }
 }
 </script>
@@ -1012,6 +1218,7 @@ export default {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  margin-top: 15px;
 }
 
 .msg-content {
@@ -1145,6 +1352,112 @@ export default {
 
 .emoji-item:hover {
   transform: scale(1.2); /* 悬浮放大 */
+}
+
+// 支持换行 背景颜色
+.content-back {
+  white-space: pre-wrap;
+  word-break: break-word;
+
+  background: #95ec69; /* 微信浅绿色 */
+  color: #000;
+  border-radius: 10px;
+  padding: 8px 12px;
+  display: inline-block;
+  position: relative;
+  line-height: 1.6;
+  transition: all 0.25s ease;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+
+/* hover 时更亮 + 阴影更柔 */
+.content-back:hover {
+  background: #8de15f;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+}
+
+/* 小三角形（气泡尾巴） */
+.content-back::before {
+  content: '';
+  position: absolute;
+  right: -6px;
+  top: 12px;
+  border-width: 6px;
+  border-style: solid;
+  border-color: transparent transparent transparent #95ec69;
+  transition: border-color 0.25s ease;
+}
+
+.content-back:hover::before {
+  border-color: transparent transparent transparent #8de15f;
+}
+
+// 撤回icon
+.withdraw-icon {
+  font-size: 16px;               /* 稍大一点更清晰 */
+  color: #b0b0b0;                /* 柔和的灰色 */
+  margin-left: 8px;
+  cursor: pointer;               /* 小手光标 */
+  transition: all 0.25s ease;    /* 平滑过渡 */
+  opacity: 0.7;                  /* 默认稍微淡一点 */
+  vertical-align: middle;        /* 和文字对齐 */
+}
+
+.withdraw-icon:hover {
+  color: #f56c6c;                /* Element Plus 风格的红色高亮 */
+  transform: scale(1.15);        /* 稍微放大 */
+  opacity: 1;                    /* 提高可见度 */
+}
+
+.withdraw-icon:active {
+  transform: scale(0.95);        /* 点击时轻微收缩反馈 */
+  color: #d9534f;                /* 深一点的红色 */
+}
+
+.msg-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  margin-top: 15px;
+}
+
+
+.card-left {
+  display: flex;
+  align-items: center;
+  gap: 10px; /* 邀约统计 与 合计 之间的间距 */
+}
+// 邀约总数合计
+.card-sum {
+  cursor: pointer;
+  font-weight: 700;
+  background: #e8f9f0; /* 柔和的绿色底 */
+  color: #2e7d32;      /* 深绿色文字 */
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  line-height: 1;
+  transition: all 0.25s ease;
+}
+
+.card-sum:hover {
+  background: #d3f3e0;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+}
+
+.card-sum i {
+  font-size: 14px;
+  color: #43a047;
+}
+
+.sum-number {
+  font-weight: 700;
+  font-size: 15px;
+  color: #1b5e20;
+  margin-left: 2px;
 }
 </style>
 

@@ -7,9 +7,12 @@ import com.talent.chart.entity.Invitation;
 import com.talent.chart.service.HomePageService;
 import com.talent.common.constant.Constants;
 import com.talent.common.domain.AjaxResult;
+import com.talent.common.utils.SecurityUtils;
 import com.talent.common.utils.StringUtils;
+import com.talent.interview.entity.Feedback;
 import com.talent.interview.entity.Location;
 import com.talent.interview.entity.Report;
+import com.talent.interview.mapper.FeedbackMapper;
 import com.talent.interview.mapper.LocationMapper;
 import com.talent.interview.mapper.ReportMapper;
 import com.talent.interview.utils.DeptPermissionUtil;
@@ -36,6 +39,9 @@ public class HomePageServiceImpl implements HomePageService {
 
     @Autowired
     private ReportMapper reportMapper;
+
+    @Autowired
+    private FeedbackMapper feedbackMapper;
 
     @Autowired
     private SysNoticeMapper noticeMapper;
@@ -117,16 +123,25 @@ public class HomePageServiceImpl implements HomePageService {
      */
     @Override
     public AjaxResult invitationTop5() {
-        // 查询所有报备
-        List<Report> reports = reportMapper.selectList(LambdaQueryBuilderUtil.buildReportQueryWrapper(null));
-        if (reports.isEmpty()) return AjaxResult.success(Collections.emptyList());
+        LambdaQueryWrapper<Feedback> wrapper;
+        // 部门等级，如果是最高级，就不用拼接数据权限了，直接显示全部
+        Integer deptLevel = SecurityUtils.getLoginUser().getDeptLevel();
+        if(null != deptLevel && Constants.RET_CODE_1_NUM == deptLevel){
+            wrapper = new LambdaQueryWrapper<>();
+        }else{
+            wrapper = DeptPermissionUtil.buildSubDeptScopeWrapper(Feedback::getSubDeptId);
+        }
+
+        // 查询所有面试反馈
+        List<Feedback> feedbackList = feedbackMapper.selectList(wrapper);
+        if (feedbackList.isEmpty()) return AjaxResult.success(Collections.emptyList());
 
         // 时间范围：本周、本月
         LocalDate now = LocalDate.now();
-        // 周起始：本周周一
-        LocalDate weekStart = now.with(DayOfWeek.MONDAY);
-        // 周结束：本周周日
-        LocalDate weekEnd = weekStart.plusDays(6);
+//        // 周起始：本周周一
+//        LocalDate weekStart = now.with(DayOfWeek.MONDAY);
+//        // 周结束：本周周日
+//        LocalDate weekEnd = weekStart.plusDays(6);
 
         // 月起始：本月1号
         LocalDate monthStart = now.withDayOfMonth(1);
@@ -134,27 +149,30 @@ public class HomePageServiceImpl implements HomePageService {
         LocalDate monthEnd = now.withDayOfMonth(now.lengthOfMonth());
 
         // 分组统计：key=deptId+createBy + 先过滤掉没有面试日期的
-        List<Report> validReports = reports.stream()
+        List<Feedback> validReports = feedbackList.stream()
                 .filter(r -> r.getInterviewDate() != null)
                 .toList();
 
         // 定义结果 Map
         Map<String, InvitationTop5> grouped = new HashMap<>();
 
-        for (Report r : validReports) {
-            String key = r.getDeptId() + "_" + r.getCreateBy();
+        for (Feedback r : validReports) {
+            // 只统计是否计费；  是否计费为空的舍弃
+            if(StringUtils.isEmpty(r.getIsBilling())){
+                continue;
+            }
+            String key = r.getSubDeptId() + "_" + r.getCreateBy();
 
             // 如果不存在就初始化
             InvitationTop5 dto = grouped.get(key);
             if (dto == null) {
-                dto = initDto(r, weekStart, weekEnd, monthStart, monthEnd);
+                dto = initDto(r, monthStart, monthEnd);
                 grouped.put(key, dto);
             } else {
                 // 已存在则合并
-                mergeDto(dto, initDto(r, weekStart, weekEnd, monthStart, monthEnd));
+                mergeDto(dto, initDto(r, monthStart, monthEnd));
             }
         }
-
 
         // 取本月邀约量前5
         List<InvitationTop5> top5 = grouped.values().stream()
@@ -166,8 +184,7 @@ public class HomePageServiceImpl implements HomePageService {
     }
 
     /** 初始化单个统计对象 */
-    private InvitationTop5 initDto(Report r,
-                                   LocalDate weekStart, LocalDate weekEnd,
+    private InvitationTop5 initDto(Feedback r,
                                    LocalDate monthStart, LocalDate monthEnd) {
         LocalDate date;
 
@@ -182,7 +199,7 @@ public class HomePageServiceImpl implements HomePageService {
         InvitationTop5 dto = new InvitationTop5();
         dto.setDeptName(r.getDeptName());
         dto.setCreateBy(r.getCreateBy());
-        dto.setWeekCount(isInWeek(date, weekStart, weekEnd) ? 1 : 0);
+//        dto.setWeekCount(isInWeek(date, weekStart, weekEnd) ? 1 : 0);
         dto.setMonthCount(isInMonth(date, monthStart, monthEnd) ? 1 : 0);
         return dto;
     }
@@ -192,13 +209,7 @@ public class HomePageServiceImpl implements HomePageService {
      * 合并两个统计对象
      */
     private void mergeDto(InvitationTop5 a, InvitationTop5 b) {
-        a.setWeekCount(a.getWeekCount() + b.getWeekCount());
         a.setMonthCount(a.getMonthCount() + b.getMonthCount());
-    }
-
-    /** 判断是否在本周 */
-    private boolean isInWeek(LocalDate date, LocalDate weekStart, LocalDate weekEnd) {
-        return !date.isBefore(weekStart) && !date.isAfter(weekEnd);
     }
 
     /** 判断是否在本月 */

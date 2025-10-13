@@ -10,10 +10,12 @@ import com.talent.common.utils.bean.SpringContextUtils;
 import com.talent.system.entity.SysDept;
 import com.talent.system.entity.login.LoginUser;
 import com.talent.system.mapper.SysDeptMapper;
+import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -100,5 +102,115 @@ public class DeptPermissionUtil {
         }
 
         return wrapper;
+    }
+
+    /**
+     * 构建带有数据权限的查询条件
+     * 用法示例：
+     * LambdaQueryWrapper<Feedback> wrapper =
+     *     DeptPermissionUtil.buildDeptScopeWrapper(Feedback::getDeptId);
+     * List<Feedback> list = feedbackMapper.selectList(wrapper);
+     *
+     * @param column 实体类中 deptId 字段的 Lambda 表达式（例如 Feedback::getDeptId）
+     * @param <T>    表对应的实体类型
+     * @return 带有 deptId IN (当前部门 + 子部门) 条件的 LambdaQueryWrapper
+     */
+    public static <T> LambdaQueryWrapper<T> buildSubDeptScopeWrapper(SFunction<T, ?> column) {
+        // 获取当前登录用户
+        LoginUser loginUser = SecurityUtils.getLoginUser();
+        Long deptId = loginUser.getDeptId();
+
+        // 获取当前部门及子部门 ID
+        List<Long> deptIds = getDeptAndChildrenIds(deptId);
+
+        LambdaQueryWrapper<T> wrapper = Wrappers.lambdaQuery();
+
+        if (deptIds != null && !deptIds.isEmpty()) {
+            // ✅ 直接固定字段名为 sub_dept_id，不再动态解析
+            String columnName = "sub_dept_id";
+
+            // 构建兼容 IN + FIND_IN_SET 查询条件
+            StringBuilder condition = new StringBuilder("(");
+            condition.append(columnName)
+                    .append(" IN (")
+                    .append(deptIds.stream().map(String::valueOf).collect(Collectors.joining(",")))
+                    .append(")");
+
+            for (Long id : deptIds) {
+                condition.append(" OR FIND_IN_SET(")
+                        .append(id)
+                        .append(", ")
+                        .append(columnName)
+                        .append(")");
+            }
+
+            condition.append(")");
+            wrapper.apply(condition.toString());
+        }
+
+        return wrapper;
+    }
+
+    // ========================
+    // 内部静态类：用于返回二级部门信息
+    // ========================
+    @Data
+    public static class DeptInfo {
+        private Integer deptId;
+        private String deptName;
+
+        public DeptInfo() {}
+
+        public DeptInfo(Integer deptId, String deptName) {
+            this.deptId = deptId;
+            this.deptName = deptName;
+        }
+    }
+
+    // ========================
+    // 公共方法：根据子部门ID查找二级部门
+    // ========================
+    /**
+     * 根据子部门ID查找其对应的二级部门（deptLevel = 2）
+     *
+     * @param subDeptId   子部门ID（可能为三级或二级）
+     * @return DeptInfo 包含二级部门的 id 和 name，未找到返回 null
+     */
+    public static DeptInfo findSecondLevelDept(Integer subDeptId, String subDeptName) {
+        List<SysDept> sysDeptList = deptMapper.selectList(null);
+
+        if (subDeptId == null || sysDeptList == null || sysDeptList.isEmpty()) {
+            return new DeptInfo();
+        }
+
+        // 找到 subDeptId 对应的部门
+        SysDept subDept = sysDeptList.stream()
+                .filter(d -> d.getDeptId().equals(Long.valueOf(subDeptId)))
+                .findFirst()
+                .orElse(null);
+
+        if (subDept != null) {
+            if (subDept.getDeptLevel() != null && subDept.getDeptLevel() != Constants.RET_CODE_3_NUM) {
+                // 不是三级 → 直接用它自己
+                return new DeptInfo(subDeptId, subDeptName);
+            } else {
+                // 是三级 → 向上找二级部门
+                SysDept current = subDept;
+                while (current != null && current.getDeptLevel() != null && current.getDeptLevel() != Constants.RET_CODE_2_NUM) {
+                    Long parentId = current.getParentId();
+                    if (parentId == null) break;
+                    current = sysDeptList.stream()
+                            .filter(d -> d.getDeptId().equals(parentId))
+                            .findFirst()
+                            .orElse(null);
+                }
+                // 找到二级部门
+                if (current != null && current.getDeptLevel() != null && current.getDeptLevel() == Constants.RET_CODE_2_NUM) {
+                    return new DeptInfo(current.getDeptId().intValue(), current.getDeptName());
+                }
+            }
+        }
+
+        return new DeptInfo();
     }
 }

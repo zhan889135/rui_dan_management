@@ -64,30 +64,31 @@
       <!-- 表格展示区域 -->
       <el-table v-loading="loading" :data="dataSource" @selection-change="handleSelectionChange" stripe>
         <el-table-column type="selection" width="55" align="center" fixed/>
-        <el-table-column label="面试点位" align="center" prop="locationName" show-overflow-tooltip/>
         <el-table-column label="归属供应商" align="center" prop="deptName" width="200" show-overflow-tooltip  v-if="deptLevel === 1"/>
+        <el-table-column label="面试点位" align="center" prop="locationName" show-overflow-tooltip/>
         <el-table-column label="姓名" align="center" prop="name" width="100" show-overflow-tooltip/>
         <el-table-column label="性别" align="center" prop="sex" width="50" show-overflow-tooltip>
           <template slot-scope="scope"><dict-tag :options="dict.type.sys_user_sex" :value="scope.row.sex"/></template>
         </el-table-column>
-        <el-table-column label="电话" align="center" prop="phone" width="150" show-overflow-tooltip/>
         <el-table-column label="年龄" align="center" prop="age" width="100" show-overflow-tooltip/>
         <el-table-column label="学历" align="center" prop="education" width="100" show-overflow-tooltip>
           <template slot-scope="scope"><dict-tag :options="dict.type.sys_education" :value="scope.row.education"/></template>
          </el-table-column>
         <el-table-column label="面试日期" align="center" prop="interviewDate" width="150" show-overflow-tooltip/>
         <el-table-column label="面试时间" align="center" prop="interviewTime" width="150" show-overflow-tooltip/>
+        <el-table-column label="电话" align="center" prop="phone" width="150" show-overflow-tooltip/>
         <el-table-column label="招聘人" align="center" prop="createName" width="100" show-overflow-tooltip/>
-        <el-table-column label="创建时间" align="center" prop="createTime" width="100">
+        <el-table-column label="创建时间" align="center" prop="createTime" width="150">
           <template slot-scope="scope">
-            <span>{{ parseTime(scope.row.createTime, '{y}-{m}-{d}') }}</span>
+            <span>{{ parseTime(scope.row.createTime) }}</span>
           </template>
         </el-table-column>
-        <el-table-column label="操作" align="center" class-name="small-padding fixed-width" width="200" fixed="right">
+        <el-table-column label="操作" align="center" class-name="small-padding fixed-width" width="250" fixed="right">
           <template slot-scope="{ row }" >
             <el-button size="mini" type="text" icon="el-icon-view" @click="handleView(row)" v-hasPermi="['interview:report:view']">查看</el-button>
             <el-button size="mini" type="text" icon="el-icon-edit" @click="handleUpdate(row)" v-hasPermi="['interview:report:edit']">编辑</el-button>
             <el-button size="mini" type="text" icon="el-icon-delete" @click="handleDelete(row)" v-hasPermi="['interview:report:remove']">删除</el-button>
+            <el-button size="mini" type="text" icon="el-icon-thumb" @click="handleArrive(row)">到场</el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -102,11 +103,11 @@
 </template>
 
 <script>
-import { list,delData } from "@/api/report";
+import {list, delData, personToFeedback} from "@/api/report";
 import EditDialog from "@/views/Report/edit.vue";
 import DetailDialog from "@/views/Report/detail.vue";
 import { listUserKv } from "@/api/system/user";
-import { getNickNameByUserName } from "@/utils/ruoyi";
+import {getNickNameByUserName, parseTime} from "@/utils/ruoyi";
 import { allListNoDept } from "@/api/location";
 
 export default {
@@ -154,6 +155,7 @@ export default {
     this.getLocationList()
   },
   methods: {
+    parseTime,
     getNickNameByUserName,
     /** 查询用户列表 */
     getUserList() {
@@ -217,6 +219,50 @@ export default {
     handleClose() {
         this.handleQuery();
     },
+
+    /** 人员到场按钮 */
+    handleArrive(row) {
+      this.$modal.confirm('是否确认人员到达现场？').then(function() {
+        return personToFeedback({ id : row.id });
+      }).then(() => {
+        this.handleCopy(row);
+      }).catch(() => {});
+    },
+
+    /** 复制按钮 */
+    handleCopy(row) {
+      // 拼接多行文本
+      const text =
+        `姓名：${row.name || ''}\n` +
+        `性别：${row.sex || ''}\n` +
+        `电话：${row.phone || ''}\n` +
+        `年龄：${row.age || ''}\n` +
+        `学历：${row.education || ''}`;
+
+      // ② 尝试现代API
+      if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(text).then(() => {
+          this.$modal.msgSuccess("确认成功,内容已复制并写入输入框");
+        }).catch(() => this.copyFallback(text));
+      } else {
+        this.copyFallback(text);
+      }
+    },
+
+    copyFallback(text) {
+      const input = document.createElement('textarea');
+      input.value = text;
+      document.body.appendChild(input);
+      input.focus();
+      input.select();
+      try {
+        document.execCommand('copy');
+        this.$modal.msgSuccess("确认成功,内容已复制并写入输入框");
+      } catch (err) {
+        this.$modal.msgError("浏览器不支持自动复制，请手动复制");
+      }
+      document.body.removeChild(input);
+    }
   }
 };
 </script>

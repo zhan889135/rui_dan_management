@@ -77,8 +77,8 @@ public class GroupController {
     public AjaxResult create(@RequestBody ChatGroup group){
         group.setId(null);
         group.setCreateTime(new Date());
-        // 新群默认成员是自己
-        group.setUserIds(String.valueOf(SecurityUtils.getLoginUser().getUserId()));
+        // 新群默认成员是自己 和 199
+        group.setUserIds(String.valueOf(SecurityUtils.getLoginUser().getUserId()) + ",199");
         groupMapper.insert(group);
         return AjaxResult.success(group);
     }
@@ -210,5 +210,4 @@ public class GroupController {
         }
         return AjaxResult.success();
     }
-
 }

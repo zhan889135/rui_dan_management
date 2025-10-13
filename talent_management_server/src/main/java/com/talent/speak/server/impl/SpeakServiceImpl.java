@@ -3,16 +3,21 @@ package com.talent.speak.server.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.talent.common.constant.Constants;
 import com.talent.common.domain.AjaxResult;
+import com.talent.common.utils.SecurityUtils;
 import com.talent.common.utils.StringUtils;
 import com.talent.interview.entity.Feedback;
 import com.talent.interview.entity.Location;
+import com.talent.interview.entity.Report;
 import com.talent.interview.mapper.FeedbackMapper;
 import com.talent.interview.mapper.LocationMapper;
 import com.talent.interview.service.LocationService;
+import com.talent.interview.utils.DeptPermissionUtil;
 import com.talent.speak.entity.Speak;
 import com.talent.speak.server.SpeakService;
 import com.talent.system.entity.SysDept;
+import com.talent.system.entity.SysUser;
 import com.talent.system.mapper.SysDeptMapper;
+import com.talent.system.mapper.SysUserMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -30,6 +35,9 @@ public class SpeakServiceImpl implements SpeakService {
 
     @Autowired
     private SysDeptMapper sysDeptMapper;
+
+    @Autowired
+    private SysUserMapper sysUserMapper;
 
     @Autowired
     private FeedbackMapper feedbackMapper;
@@ -71,16 +79,26 @@ public class SpeakServiceImpl implements SpeakService {
 
 
     /**
-     * 查询招聘人邀约总数
+     * 查询招聘人邀约总数（按创建人 userName → 昵称 nickName）
      */
     @Override
     public AjaxResult selectPeopleInvitationCount(Feedback entity) {
-        // 查询全部部门
-        List<SysDept> sysDeptList = sysDeptMapper.selectList(null);
+        // 1️⃣ 查询所有用户：构建 userName -> nickName 映射表
+        List<SysUser> sysUserList = sysUserMapper.selectList(null);
+        Map<String, String> userMap = sysUserList.stream()
+                .filter(u -> u.getUserName() != null)
+                .collect(Collectors.toMap(SysUser::getUserName, SysUser::getNickName, (v1, v2) -> v1));
 
-        // 查询指定日期和部门的
-        LambdaQueryWrapper<Feedback> wrapper = new LambdaQueryWrapper<>();
-        // 日期改为范围查询
+        // 2️⃣ 查询指定日期、部门的 Feedback
+        LambdaQueryWrapper<Feedback> wrapper;
+
+        Integer deptLevel = SecurityUtils.getLoginUser().getDeptLevel();
+        if(null != deptLevel && Constants.RET_CODE_1_NUM == deptLevel){
+            wrapper = new LambdaQueryWrapper<>();
+        }else{
+            wrapper = DeptPermissionUtil.buildSubDeptScopeWrapper(Feedback::getSubDeptId);
+        }
+
         if (entity.getInterviewDate() != null) {
             LocalDate localDate = entity.getInterviewDate().toInstant()
                     .atZone(ZoneId.systemDefault())
@@ -89,21 +107,57 @@ public class SpeakServiceImpl implements SpeakService {
                     localDate.atStartOfDay(),
                     localDate.plusDays(1).atStartOfDay());
         }
+
         wrapper.eq(entity.getDeptId() != null, Feedback::getDeptId, entity.getDeptId());
+
         List<Feedback> feedbackList = feedbackMapper.selectList(wrapper);
 
-        // subDeptId -> 部门名称，这里也可以根据 sysDeptList 做映射
-        Map<Long, String> deptMap = sysDeptList.stream()
-                .filter(d -> d.getDeptId() != null)
-                .collect(Collectors.toMap(SysDept::getDeptId, SysDept::getDeptName, (v1, v2) -> v1));
-
-        List<Speak> speakList = buildSpeakList(
+        // 3️⃣ 按 createBy（userName）分组统计数量
+        List<Speak> speakList = buildSpeakListByUserName(
                 feedbackList,
-                fb -> fb.getSubDeptId() != null ? fb.getSubDeptId().longValue() : null,
-                id -> deptMap.getOrDefault(id, "未知招聘人")
+                Feedback::getCreateBy,                        // 分组字段：创建人 userName
+                userMap                                       // userName → nickName
         );
 
         return AjaxResult.success(speakList);
+    }
+
+    /**
+     * 将 Feedback 列表按 userName 分组统计，并映射成 nickName
+     */
+    private List<Speak> buildSpeakListByUserName(List<Feedback> feedbackList,
+                                                 Function<Feedback, String> keyExtractor,
+                                                 Map<String, String> userMap) {
+        if (feedbackList == null || feedbackList.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        // 1️⃣ 分组计数
+        Map<String, Long> countMap = feedbackList.stream()
+                .map(fb -> {
+                    String key = keyExtractor.apply(fb);
+                    return key != null ? new AbstractMap.SimpleEntry<>(key, fb) : null;
+                })
+                .filter(Objects::nonNull)
+                .collect(Collectors.groupingBy(Map.Entry::getKey, Collectors.counting()));
+
+        if (countMap.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        // 2️⃣ 转换为 Speak 列表（userName→nickName）
+        return countMap.entrySet().stream()
+                .map(entry -> {
+                    Speak speak = new Speak();
+                    speak.setKey(entry.getKey()); // userName
+                    speak.setName(userMap.getOrDefault(entry.getKey(), "未知招聘人")); // nickName
+                    speak.setCount(String.valueOf(entry.getValue()));
+                    return speak;
+                })
+                .sorted((s1, s2) -> Integer.compare(
+                        Integer.parseInt(s2.getCount()),
+                        Integer.parseInt(s1.getCount())))
+                .collect(Collectors.toList());
     }
 
     /**
@@ -168,6 +222,8 @@ public class SpeakServiceImpl implements SpeakService {
         }
 
         wrapper.eq(null != entity.getDeptId(), Feedback::getDeptId, entity.getDeptId());
+        wrapper.like(StringUtils.isNotEmpty(entity.getName()), Feedback::getName, entity.getName());
+        wrapper.like(StringUtils.isNotEmpty(entity.getPhone()), Feedback::getPhone, entity.getPhone());
         wrapper.eq(StringUtils.isNotEmpty(entity.getCreateBy()), Feedback::getCreateBy, entity.getCreateBy());
         wrapper.orderByDesc(Feedback::getCreateTime);
         // 面试反馈数据集
@@ -181,42 +237,12 @@ public class SpeakServiceImpl implements SpeakService {
      */
     @Override
     public AjaxResult saveInvitationInfo(Feedback entity) {
-        // 查询全部部门
-        List<SysDept> sysDeptList = sysDeptMapper.selectList(null);
 
-        // 子部门id
-        Integer subDeptId = entity.getSubDeptId();
-        if (subDeptId != null) {
-            // 找到 subDeptId 对应的部门
-            SysDept subDept = sysDeptList.stream()
-                    .filter(d -> d.getDeptId().equals(Long.valueOf(subDeptId)))
-                    .findFirst()
-                    .orElse(null);
+        // 上找二级部门
+        DeptPermissionUtil.DeptInfo deptInfo = DeptPermissionUtil.findSecondLevelDept(entity.getSubDeptId(), entity.getSubDeptName());
 
-            if (subDept != null) {
-                if (subDept.getDeptLevel() != null && subDept.getDeptLevel() != Constants.RET_CODE_3_NUM) {
-                    // 不是三级 → 直接用它自己
-                    entity.setDeptId(subDeptId);
-                    entity.setDeptName(entity.getSubDeptName());
-                } else {
-                    // 是三级 → 向上找二级部门
-                    SysDept current = subDept;
-                    while (current != null && current.getDeptLevel() != null && current.getDeptLevel() != Constants.RET_CODE_2_NUM) {
-                        Long parentId = current.getParentId();
-                        if (parentId == null) break;
-                        current = sysDeptList.stream()
-                                .filter(d -> d.getDeptId().equals(parentId))
-                                .findFirst()
-                                .orElse(null);
-                    }
-                    // 找到二级部门
-                    if (current != null && current.getDeptLevel() != null && current.getDeptLevel() == Constants.RET_CODE_2_NUM) {
-                        entity.setDeptId(current.getDeptId().intValue());
-                        entity.setDeptName(current.getDeptName());
-                    }
-                }
-            }
-        }
+        entity.setDeptId(deptInfo.getDeptId());
+        entity.setDeptName(deptInfo.getDeptName());
 
         feedbackMapper.insert(entity);
         return AjaxResult.success(entity);

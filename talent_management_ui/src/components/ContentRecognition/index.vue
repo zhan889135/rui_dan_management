@@ -11,12 +11,8 @@
       >
       <div style="user-select: text;">
         姓名：刘倩<br>
-        性别：女<br>
         电话：13604524587<br>
-        年龄：25<br>
-        学历：研究生<br>
-        面试日期：2025-09-08<br>
-        面试时间：16:05
+        年龄：25
       </div>
       <el-button slot="reference" type="text">查看示例</el-button>
       </el-popover>
@@ -28,12 +24,8 @@
       v-model="textarea"
       :placeholder="`例如：
 姓名：刘倩
-性别：女
 电话：13604524587
-年龄：25
-学历：研究生
-面试日期：2025-09-08
-面试时间：16:05`">
+年龄：25`">
     </el-input>
 
   </div>
@@ -47,7 +39,7 @@ export default {
   },
    data() {
       return {
-        textarea: '',       // 将要识别的内容
+        textarea: "姓名：\n电话：\n年龄：",       // 使用 \n 实现换行
         sexList:[],         // 性别列表
         educationList:[]    // 学历列表
       }

@@ -67,12 +67,14 @@ public class LambdaQueryBuilderUtil {
         if(null != deptLevel && Constants.RET_CODE_1_NUM == deptLevel){
             wrapper = new LambdaQueryWrapper<>();
         }else{
-            wrapper = DeptPermissionUtil.buildDeptScopeWrapper(Report::getDeptId);
+            wrapper = DeptPermissionUtil.buildSubDeptScopeWrapper(Report::getSubDeptId);
         }
 
         if (entity != null) {
             // 精确匹配：供应商ID
-            wrapper.eq(entity.getDeptId() != null, Report::getDeptId, entity.getDeptId());
+            wrapper.eq(entity.getSubDeptId() != null, Report::getSubDeptId, entity.getSubDeptId());
+            // 模糊查询：子部门
+            wrapper.like(StringUtils.isNotBlank(entity.getSubDeptName()), Report::getSubDeptName, entity.getSubDeptName());
             // 模糊查询：供应商名称
             wrapper.like(StringUtils.isNotBlank(entity.getDeptName()), Report::getDeptName, entity.getDeptName());
             // 精确匹配：面试点位ID

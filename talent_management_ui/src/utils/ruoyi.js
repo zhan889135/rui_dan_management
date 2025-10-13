@@ -595,3 +595,58 @@ export function sumProperty(list, prop) {
   return Number(total.toFixed(2));
 }
 
+/**
+ * 播放系统提示音
+ * @param {string} path 可选，音频路径（默认是 /assets/mp3/4089.wav）
+ */
+let lastPlayTime = 0;
+
+/**
+ * 播放系统提示音
+ * @param {string} path 可选，自定义音频路径
+ */
+export function playAudio(path) {
+  const now = Date.now();
+  if (now - lastPlayTime < 800) return; // 防止短时间重复播放
+  lastPlayTime = now;
+
+  try {
+    const audio = new Audio(require('@/assets/mp3/4089.wav'));
+    if (path) audio.src = path;
+
+    audio.play().catch(() => {
+      console.warn('音频自动播放被浏览器阻止，请在用户交互后触发');
+    });
+  } catch (e) {
+    console.error('播放音效失败：', e);
+  }
+}
+
+let blinkTimer = null
+let blinkFlag = false
+let originalTitle = document.title
+
+/**
+ * 开始闪烁浏览器标签标题
+ * @param {string} text 自定义提示文本（默认：'【新消息】'）
+ */
+export function startBlinkTitle(text = '【新消息】') {
+  if (blinkTimer) return  // 已经在闪烁中则不重复
+
+  originalTitle = document.title
+  blinkTimer = setInterval(() => {
+    blinkFlag = !blinkFlag
+    document.title = blinkFlag ? `${text}${originalTitle}` : `【　　　】${originalTitle}`
+  }, 800)
+}
+
+/**
+ * 停止闪烁，恢复原标题
+ */
+export function stopBlinkTitle() {
+  if (blinkTimer) {
+    clearInterval(blinkTimer)
+    blinkTimer = null
+  }
+  document.title = originalTitle
+}

@@ -3,11 +3,13 @@ package com.talent.interview.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.talent.common.constant.Constants;
 import com.talent.common.domain.AjaxResult;
+import com.talent.common.utils.SecurityUtils;
 import com.talent.common.utils.StringUtils;
 import com.talent.common.utils.mybatisPlus.MyBatisBatchInsertHelper;
 import com.talent.interview.entity.Location;
 import com.talent.interview.mapper.LocationMapper;
 import com.talent.interview.service.LocationService;
+import com.talent.interview.utils.DeptPermissionUtil;
 import com.talent.interview.utils.LambdaQueryBuilderUtil;
 import com.talent.system.entity.SysDept;
 import com.talent.system.mapper.SysDeptMapper;
@@ -39,7 +41,13 @@ public class LocationServiceImpl implements LocationService {
     @Override
     public List<Location> allListNoDept(Location entity) {
         LambdaQueryWrapper<Location> wrapper = new LambdaQueryWrapper<>();
-        wrapper.like(StringUtils.isNotEmpty(entity.getDeptId()), Location::getDeptId, entity.getDeptId());
+
+        // 部门等于1,是查看全部点位,不等于1,才加入条件
+        Integer deptLevel = SecurityUtils.getLoginUser().getDeptLevel();
+        if(null != deptLevel && Constants.RET_CODE_1_NUM != deptLevel){
+            wrapper.like(StringUtils.isNotEmpty(entity.getDeptId()), Location::getDeptId, entity.getDeptId());
+        }
+
         // 只查公司名称 + 只查面试点位
         wrapper.select(Location::getId, Location::getCompanyName, Location::getName);
         return locationMapper.selectList(wrapper);
