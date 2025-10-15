@@ -398,16 +398,19 @@ export default {
       this.ws.onmessage = async e => {
         const msg = JSON.parse(e.data)
         if (msg.type === 'chat') {
-          this.messages.push({
-            from: msg.from,
-            content: msg.content,
-            time: msg.time || new Date().toLocaleString(),
-            id: msg.id
-          })
-          if (msg.content && msg.content.startsWith('http')) {
-            await this.scrollAfterRender()
-          } else {
-            this.$nextTick(() => this.scrollToBottom())
+          // 应该判断一下，chat是否是当前群的，否则不要添加数据
+          if (String(msg.groupId) === String(this.currentGroupId)) {
+            this.messages.push({
+              from: msg.from,
+              content: msg.content,
+              time: msg.time || new Date().toLocaleString(),
+              id: msg.id
+            })
+            if (msg.content && msg.content.startsWith('http')) {
+              await this.scrollAfterRender()
+            } else {
+              this.$nextTick(() => this.scrollToBottom())
+            }
           }
         } else if (msg.type === 'unread') {
           // 未读 +1
@@ -415,25 +418,29 @@ export default {
           if (idx > -1 && this.currentGroupId + '' !== msg.groupId + '') {
             const cur = this.groups[idx].unreadCount || 0
             this.$set(this.groups[idx], 'unreadCount', cur + 1)
-          }
-          // ✅ 播放提示音
-          let userId1 = msg.from;
-          let userId2 = this.$store?.state?.user?.id;
-          // ✅ 判断是否自己发的消息（字符串和数字兼容）
-          if (String(userId1) !== String(userId2)) {
-            playAudio(); // ✅ 只播放别人发的消息
-            startBlinkTitle('【新消息】') // ✅ 启动页签闪烁
+
+            // ✅ 播放提示音
+            let userId1 = msg.from;
+            let userId2 = this.$store?.state?.user?.id;
+            // ✅ 判断是否自己发的消息（字符串和数字兼容）
+            if (String(userId1) !== String(userId2)) {
+              playAudio(); // ✅ 只播放别人发的消息
+              startBlinkTitle('【新消息】') // ✅ 启动页签闪烁
+            }
           }
         } else if (msg.type === 'deleteMessage') {
-          // 👇 重新再加载历史消息
-          getHistory(this.currentGroupId).then(response => {
-            this.messages = response.data.map(m => ({
-              from: m.fromUser,
-              content: m.content,
-              time: m.sendTime,
-              id: m.id
-            }))
-          });
+          // 应该判断一下，deleteMessage是否是当前群的，否则不要查询历史数据
+          if (String(msg.groupId) === String(this.currentGroupId)) {
+            // 👇 重新再加载历史消息
+            getHistory(this.currentGroupId).then(response => {
+              this.messages = response.data.map(m => ({
+                from: m.fromUser,
+                content: m.content,
+                time: m.sendTime,
+                id: m.id
+              }))
+            });
+          }
         }
       }
     },
@@ -553,7 +560,7 @@ export default {
 
         // ✅ 无条件替换掉 127.0.0.1，无论开发还是生产
         // 同时兼容 127.0.1.1 这种变体
-        // newUrl = newUrl.replace(/127(?:\.\d+){3}/, process.env.VUE_APP_REPLACE_IP);
+        newUrl = newUrl.replace(/127(?:\.\d+){3}/, process.env.VUE_APP_REPLACE_IP);
 
         this.sendMessage(newUrl);
       } else {
