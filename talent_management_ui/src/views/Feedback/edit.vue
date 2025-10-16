@@ -224,19 +224,17 @@ export default {
       rules: {
         locationId: [{ required: true, message: '请选择面试点位', trigger: 'change' }],
         name: [{ required: true, message: '请输入姓名', trigger: 'blur' }],
-        // sex: [{ required: true, message: '请选择性别', trigger: 'change' }],
-        // phone: [{ required: true, message: '请输入电话', trigger: 'blur' },
-        //   { pattern: /^1[3-9]\d{9}$/, message: '请输入正确的手机号码', trigger: 'blur' }
-        // ],
-        // age: [
-        //   { required: true, pattern: /^[1-9]\d*$/, message: '年龄必须为正整数', trigger: 'blur' }
-        // ],
-        // education: [{ required: true, message: '请选择学历', trigger: 'change' }],
+        sex: [{ required: true, message: '请选择性别', trigger: 'change' }],
+        phone: [{ required: true, message: '请输入电话', trigger: 'blur' }, { pattern: /^1[3-9]\d{9}$/, message: '请输入正确的手机号码', trigger: 'blur' }],
+        age: [{ required: true, pattern: /^[1-9]\d*$/, message: '年龄必须为正整数', trigger: 'blur' }],
+        education: [{ required: true, message: '请选择学历', trigger: 'change' }],
 
+        // 第一套反馈
         reason: [{ required: true, message: '请输入反馈原因', trigger: 'blur' }],
         hardRequirements: [{ required: true, message: '请选择硬性条件', trigger: 'change' }],
         isBilling: [{ required: true, message: '请选择是否计费', trigger: 'change' }],
 
+        // 第二套反馈
         reason2: [{ required: true, message: '请输入反馈原因', trigger: 'blur' }],
         hardRequirements2: [{ required: true, message: '请选择硬性条件', trigger: 'change' }],
         isBilling2: [{ required: true, message: '请选择是否计费', trigger: 'change' }],
@@ -249,20 +247,31 @@ export default {
 
   methods: {
     getNickNameByUserName,
-    /** 打开新增弹窗 */
-    // handleAdd() {
-    //   this.title = '新增'
-    //   this.resetForm()
-    //   this.$set(this.form, 'deptId', this.$store.state.user.deptId);
-    //   this.$set(this.form, 'deptName', this.$store.state.user.deptName);
-    //   this.$set(this.form, 'createBy', this.$store.state.user.userName);
-    //   this.visible = true
-    // },
 
     // 根据 deptLevel 动态调整 rules
     adjustRules() {
+      // level=1，反馈原因非必填
+      if (this.deptLevel === 1) {
+        delete this.rules.reason;
+      }else
+
+      // level=2，不显示 hardRequirements，isBilling
+      if (this.deptLevel === 2) {
+
+        delete this.rules.reason;
+        delete this.rules.reason2;
+        delete this.rules.hardRequirements;
+        delete this.rules.isBilling;
+      } else
+
+      // level=3，不显示 reason / hardRequirements / isBilling，所以删除对应校验
       if (this.deptLevel === 3) {
-        // level=3，不显示 reason / hardRequirements / isBilling，所以删除对应校验
+
+        delete this.rules.sex;
+        delete this.rules.phone;
+        delete this.rules.age;
+        delete this.rules.education;
+
         delete this.rules.reason;
         delete this.rules.hardRequirements;
         delete this.rules.isBilling;
@@ -270,31 +279,54 @@ export default {
         delete this.rules.reason2;
         delete this.rules.hardRequirements2;
         delete this.rules.isBilling2;
-      } else if (this.deptLevel === 2) {
-        // level=2，不显示 hardRequirements，isBilling
-        delete this.rules.reason;
-        delete this.rules.hardRequirements;
-        delete this.rules.isBilling;
-      }else if (this.deptLevel === 1) {
-        // level=1，反馈原因非必填
-        delete this.rules.reason;
       }
     },
 
     // 控制不同等级，显示不同的表单，
     isDisabled(field) {
       const level = this.deptLevel;
-      if (level === 3) return false; // 员工等级，只有在首页交流板块，可以调用编辑界面，所以全部可编辑
 
       // 总部门权限，
       if (level === 1) {
-        // 只能编辑：反馈原因1 / 硬性条件1 / 是否计费1
-        return !['reason', 'hardRequirements', 'isBilling'].includes(field);
-      }
+        // 只能编辑：面试点位、姓名、性别、电话、年龄、学历、反馈原因、硬性条件、是否计费
+        return ![
+          'locationId',
+          'name',
+          'sex',
+          'phone',
+          'age',
+          'education',
+          'reason',
+          'hardRequirements',
+          'isBilling'
+        ].includes(field);
+      } else
       // 供应商权限，
       if (level === 2) {
-        // 只能编辑：反馈原因2 / 硬性条件2 / 是否计费2
-        return ![ 'reason2', 'hardRequirements2', 'isBilling2'].includes(field);
+        // 只能编辑：面试点位、姓名、性别、电话、年龄、学历、反馈原因、硬性条件、是否计费
+        return ![
+          'locationId',
+          'name',
+          'sex',
+          'phone',
+          'age',
+          'education',
+          'reason2',
+          'hardRequirements2',
+          'isBilling2'
+        ].includes(field);
+      } else
+      // 员工权限
+      if (level === 3) {
+        // 只能编辑：面试点位、姓名、性别、电话、年龄、学历
+        return ![
+          'locationId',
+          'name',
+          'sex',
+          'phone',
+          'age',
+          'education',
+        ].includes(field);
       }
       return true; // 其他情况默认禁用
     },
