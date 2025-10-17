@@ -8,7 +8,6 @@
         <el-card>
           <div slot="header" class="card-header"> <span class="card-title">群聊</span></div>
 
-
           <div class="chat-container">
             <!-- 左侧 群组列表 -->
             <div class="group-list">
@@ -173,6 +172,7 @@
             <span class="card-title">邀约明细</span>
             <!-- 查询输入框区域 -->
             <div class="card-actions">
+              <el-input v-model="queryParams.locationName" placeholder="点位" size="small" clearable style="width: 120px; margin-right: 8px;" @keyup.enter.native="getInvitationInfo()"/>
               <el-input v-model="queryParams.name" placeholder="姓名" size="small" clearable style="width: 120px; margin-right: 8px;" @keyup.enter.native="getInvitationInfo()"/>
               <el-input v-model="queryParams.phone" placeholder="电话" size="small" clearable style="width: 140px; margin-right: 8px;" @keyup.enter.native="getInvitationInfo()"/>
               <el-tooltip effect="dark" content="查询" placement="top"><i class="el-icon-search" @click="getInvitationInfo()"></i></el-tooltip>
@@ -286,6 +286,7 @@ export default {
 
       // 邀约明细查询项
       queryParams: {
+        locationName: '',
         name: '',
         phone: ''
       },
@@ -326,6 +327,7 @@ export default {
         interviewDate: this.$dayjs().format('YYYY-MM-DD'),
         createBy: this.$store.state.user.userName,
         name: this.queryParams.name || '',
+        locationName: this.queryParams.locationName || '',
         phone: this.queryParams.phone || ''
       })
         .then(res => (this.invitationInfoData = res.data || []))

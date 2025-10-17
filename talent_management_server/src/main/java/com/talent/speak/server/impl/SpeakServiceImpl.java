@@ -222,6 +222,7 @@ public class SpeakServiceImpl implements SpeakService {
         }
 
         wrapper.eq(null != entity.getDeptId(), Feedback::getDeptId, entity.getDeptId());
+        wrapper.like(StringUtils.isNotEmpty(entity.getLocationName()), Feedback::getLocationName, entity.getLocationName());
         wrapper.like(StringUtils.isNotEmpty(entity.getName()), Feedback::getName, entity.getName());
         wrapper.like(StringUtils.isNotEmpty(entity.getPhone()), Feedback::getPhone, entity.getPhone());
         wrapper.eq(StringUtils.isNotEmpty(entity.getCreateBy()), Feedback::getCreateBy, entity.getCreateBy());
