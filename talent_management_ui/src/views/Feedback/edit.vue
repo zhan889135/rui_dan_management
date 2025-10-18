@@ -58,6 +58,12 @@
 
             <!--总部门权限-->
             <span v-if="deptLevel === 1">
+              <el-col :span="12">
+                <el-form-item label="面试日期" prop="interviewDate">
+                  <el-date-picker v-model="form.interviewDate" type="date" placeholder="请选择面试日期" value-format="yyyy-MM-dd" style="width: 100%;" />
+                </el-form-item>
+              </el-col>
+
               <el-col :span="24">
                 <el-form-item label="反馈原因" prop="reason">
                   <el-input type="textarea" :rows="4" placeholder="请输入反馈原因" v-model="form.reason" maxlength="500"/>
@@ -209,6 +215,8 @@ export default {
         hardRequirements:undefined,
         // 是否计费
         isBilling:undefined,
+        // 面试日期
+        interviewDate:undefined,
 
         // 反馈原因2
         reason2:undefined,
@@ -228,6 +236,7 @@ export default {
         phone: [{ required: true, message: '请输入电话', trigger: 'blur' }, { pattern: /^1[3-9]\d{9}$/, message: '请输入正确的手机号码', trigger: 'blur' }],
         age: [{ required: true, pattern: /^[1-9]\d*$/, message: '年龄必须为正整数', trigger: 'blur' }],
         education: [{ required: true, message: '请选择学历', trigger: 'change' }],
+        interviewDate: [{ required: true, message: '请选择面试日期', trigger: 'change' }],
 
         // 第一套反馈
         reason: [{ required: true, message: '请输入反馈原因', trigger: 'blur' }],
@@ -258,6 +267,7 @@ export default {
       // level=2，不显示 hardRequirements，isBilling
       if (this.deptLevel === 2) {
 
+        delete this.rules.interviewDate;
         delete this.rules.reason;
         delete this.rules.reason2;
         delete this.rules.hardRequirements;
@@ -266,12 +276,12 @@ export default {
 
       // level=3，不显示 reason / hardRequirements / isBilling，所以删除对应校验
       if (this.deptLevel === 3) {
-
         delete this.rules.sex;
         delete this.rules.phone;
         delete this.rules.age;
         delete this.rules.education;
 
+        delete this.rules.interviewDate;
         delete this.rules.reason;
         delete this.rules.hardRequirements;
         delete this.rules.isBilling;
@@ -296,6 +306,7 @@ export default {
           'phone',
           'age',
           'education',
+          'interviewDate',
           'reason',
           'hardRequirements',
           'isBilling'

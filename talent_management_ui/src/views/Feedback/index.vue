@@ -71,6 +71,12 @@
           </el-col>
         </span>
 
+        <el-col :span="3">
+          <el-form-item label="招聘人" prop="createName">
+            <el-input v-model="queryParams.createName" placeholder="请输入招聘人" clearable @keyup.enter.native="handleQuery"/>
+          </el-form-item>
+        </el-col>
+
         <el-col :span="6">
           <el-form-item label="面试日期">
             <el-date-picker
@@ -89,7 +95,7 @@
         </el-col>
 
 
-        <el-col :span="18" align="right">
+        <el-col :span="15" align="right">
            <el-form-item>
             <el-button type="primary" icon="el-icon-search" size="mini" @click="handleQuery">搜索</el-button>
             <el-button icon="el-icon-refresh" size="mini" @click="resetQuery">重置</el-button>
@@ -101,7 +107,7 @@
     <!-- 操作按钮区域 -->
     <el-row :gutter="10" class="mb8">
       <el-col :span="1.5"><el-button type="info" plain icon="el-icon-upload2" size="mini" @click="handleImport" v-hasPermi="['interview:feedback:import']" v-if="deptLevel === 1">导入</el-button></el-col>
-      <el-col :span="1.5"><el-button type="warning" plain icon="el-icon-download" size="mini" @click="handleExport" v-hasPermi="['interview:feedback:excel']" v-if="deptLevel === 1">导出</el-button></el-col>
+      <el-col :span="1.5"><el-button type="warning" plain icon="el-icon-download" size="mini" @click="handleExport" >导出</el-button></el-col>
       <el-col :span="1.5"><el-button type="warning" plain icon="el-icon-upload2" size="mini" @click="pushExport" v-if="deptLevel === 2">一键推送</el-button></el-col>
       <el-col :span="1.5" v-if="deptLevel === 1"><el-button type="danger" plain icon="el-icon-delete" size="mini" :disabled="multiple" @click="handleDelete">删除</el-button></el-col>
       <right-toolbar :showSearch.sync="showSearch" @queryTable="getList"></right-toolbar>
@@ -156,6 +162,7 @@
             </template>
            </el-table-column>
         </span>
+        <el-table-column label="招聘人" align="center" prop="createName" width="100" show-overflow-tooltip/>
 
         <el-table-column label="操作" align="center" class-name="small-padding fixed-width" width="200" fixed="right">
           <template slot-scope="{ row }">
@@ -245,6 +252,7 @@ export default {
         hardRequirements2: undefined,
         isBilling2: undefined,
         deptLevel: this.$store.state.user.deptLevel,
+        createName: undefined,
         dateRange: [], // ["2025-10-01", "2025-10-09"]
       },
       // 面试反馈导入

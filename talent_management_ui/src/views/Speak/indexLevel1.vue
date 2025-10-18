@@ -262,6 +262,7 @@
             <span class="card-title">邀约明细</span>
             <!-- 查询输入框区域 -->
             <div class="card-actions">
+              <el-input v-model="queryParams.locationName" placeholder="点位" size="small" clearable style="width: 120px; margin-right: 8px;" @keyup.enter.native="getInvitationInfo()"/>
               <el-input v-model="queryParams.name" placeholder="姓名" size="small" clearable style="width: 120px; margin-right: 8px;" @keyup.enter.native="getInvitationInfo()"/>
               <el-input v-model="queryParams.phone" placeholder="电话" size="small" clearable style="width: 140px; margin-right: 8px;" @keyup.enter.native="getInvitationInfo()"/>
               <el-tooltip effect="dark" content="查询" placement="top"><i class="el-icon-search" @click="getInvitationInfo()"></i></el-tooltip>
@@ -271,13 +272,8 @@
             <el-table stripe :data="invitationInfoData" v-loading="invitationInfoLoading" height="368">
               <el-table-column type="index" label="序号" width="50" align="center"/>
               <el-table-column label="面试点位" align="center" prop="locationName" show-overflow-tooltip/>
-              <el-table-column label="供应商" align="center" prop="deptName" width="80"/>
+              <el-table-column label="供应商" align="center" prop="deptName" />
               <el-table-column label="姓名" align="center" prop="name" width="80"/>
-              <el-table-column label="性别" align="center" prop="sex" width="50">
-                <template slot-scope="scope">
-                  <dict-tag :options="dict.type.sys_user_sex" :value="scope.row.sex"/>
-                </template>
-              </el-table-column>
               <el-table-column label="电话" align="center" prop="phone" width="110"/>
               <el-table-column label="年龄" align="center" prop="age" width="50"/>
               <el-table-column label="学历" align="center" prop="education" width="80">
@@ -378,6 +374,7 @@ export default {
 
       // 邀约明细查询项
       queryParams: {
+        locationName: '',
         name: '',
         phone: ''
       },
@@ -437,6 +434,7 @@ export default {
         interviewDate: this.$dayjs().format('YYYY-MM-DD'),
         deptId: deptId,
         name: this.queryParams.name || '',
+        locationName: this.queryParams.locationName || '',
         phone: this.queryParams.phone || ''
       })
         .then(res => (this.invitationInfoData = res.data || []))

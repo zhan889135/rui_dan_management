@@ -26,7 +26,7 @@
           </el-col>
           <el-col :span="12">
             <el-form-item label="电话" prop="phone">
-              <el-input v-model="form.phone" placeholder="请输入电话" maxlength="11" clearable/>
+              <el-input v-model="form.phone" placeholder="请输入电话" maxlength="50" clearable @input="cleanPhone"/>
             </el-form-item>
           </el-col>
           <el-col :span="12">
@@ -83,9 +83,9 @@
 </template>
 
 <script>
-import { save , getInfo } from "@/api/report";
+import {getInfo, save} from "@/api/report";
 import ContentRecognition from "@/components/ContentRecognition";
-import { getNickNameByUserName } from "@/utils/ruoyi";
+import {getNickNameByUserName} from "@/utils/ruoyi";
 
 export default {
   name: 'EditDialog',

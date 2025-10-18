@@ -136,6 +136,8 @@ public class LambdaQueryBuilderUtil {
             wrapper.eq(StringUtils.isNotBlank(entity.getHardRequirements2()), Feedback::getHardRequirements2, entity.getHardRequirements2());
             // 精确匹配：是否计费2Y-是；N-否
             wrapper.eq(StringUtils.isNotBlank(entity.getIsBilling2()), Feedback::getIsBilling2, entity.getIsBilling2());
+            // 模糊查询：创建人名称
+            wrapper.like(StringUtils.isNotBlank(entity.getCreateName()), Feedback::getCreateName, entity.getCreateName());
 
             // 分为三个列表，deptLevel：1总部，能看所有的，2供应商，能看总部推送的，3员工，能看供应商推送的
             if(null != entity.getDeptLevel()){

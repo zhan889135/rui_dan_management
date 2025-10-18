@@ -11,6 +11,7 @@ import com.talent.common.utils.exception.ServiceException;
 import com.talent.common.utils.mybatisPlus.MyBatisBatchInsertHelper;
 import com.talent.interview.entity.Feedback;
 import com.talent.interview.entity.Location;
+import com.talent.interview.entity.Report;
 import com.talent.interview.mapper.FeedbackMapper;
 import com.talent.interview.mapper.LocationMapper;
 import com.talent.interview.service.FeedbackService;
@@ -73,7 +74,6 @@ public class FeedbackServiceImpl implements FeedbackService {
     @Override
     public List<Feedback> queryPage(Feedback entity) {
         LambdaQueryWrapper<Feedback> wrapper = LambdaQueryBuilderUtil.buildFeedbackQueryWrapper(entity);
-
         startPage();
         return feedbackMapper.selectList(wrapper);
     }
@@ -92,7 +92,19 @@ public class FeedbackServiceImpl implements FeedbackService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public AjaxResult saveOrUpdate(Feedback entity) {
+        // 先检查名称唯一性
+        Integer count = feedbackMapper.selectCount(
+                new LambdaQueryWrapper<Feedback>()
+                        .eq(Feedback::getPhone, entity.getPhone())
+                        .ne(entity.getId() != null, Feedback::getId, entity.getId()) // 如果是更新，排除自己
+        );
+
+        if (count != null && count > 0) {
+            return AjaxResult.error("手机号码已存在，请重新输入");
+        }
+
         if (entity.getId() == null) {
+            entity.setCreateName(SecurityUtils.getLoginUser().getUser().getNickName());
             feedbackMapper.insert(entity);
         } else {
             MyBatisBatchInsertHelper.updateAllFieldsById(entity, feedbackMapper);

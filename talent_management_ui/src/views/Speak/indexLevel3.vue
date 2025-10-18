@@ -183,11 +183,6 @@
               <el-table-column type="index" label="序号" width="50" align="center"/>
               <el-table-column label="面试点位" align="center" prop="locationName" show-overflow-tooltip/>
               <el-table-column label="姓名" align="center" prop="name" width="70"/>
-              <el-table-column label="性别" align="center" prop="sex" width="50">
-                <template slot-scope="scope">
-                  <dict-tag :options="dict.type.sys_user_sex" :value="scope.row.sex"/>
-                </template>
-              </el-table-column>
               <el-table-column label="电话" align="center" prop="phone" width="110"/>
               <el-table-column label="年龄" align="center" prop="age" width="50"/>
               <el-table-column label="学历" align="center" prop="education" width="80">
@@ -682,7 +677,6 @@ export default {
       // 拼接多行文本
       const text =
         `姓名：${row.name || ''}\n` +
-        `性别：${row.sex || ''}\n` +
         `电话：${row.phone || ''}\n` +
         `年龄：${row.age || ''}\n` +
         `学历：${row.education || ''}`;

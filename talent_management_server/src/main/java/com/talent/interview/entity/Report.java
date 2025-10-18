@@ -68,16 +68,6 @@ public class Report extends BaseEntity {
     /** 创建者名称 */
     private String createName;
 
-    /** 开始日期 */
-//    @JsonFormat(pattern = "yyyy-MM-dd")
-//    @TableField(exist = false)
-//    private Date startDate;
-//
-//    /** 结束日期 */
-//    @JsonFormat(pattern = "yyyy-MM-dd")
-//    @TableField(exist = false)
-//    private Date endDate;
-
     /** 查询条件：日期范围 */
     @TableField(exist = false)
     private String[] dateRange;

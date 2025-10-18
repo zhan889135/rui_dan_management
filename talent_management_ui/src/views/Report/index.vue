@@ -57,7 +57,7 @@
     <el-row :gutter="10" class="mb8">
       <el-col :span="1.5"><el-button type="primary" plain icon="el-icon-plus" size="mini" @click="handleAdd" v-hasPermi="['interview:report:add']">新增</el-button></el-col>
       <el-col :span="1.5"><el-button type="success" plain icon="el-icon-edit" size="mini" :disabled="single" @click="handleUpdate" v-hasPermi="['interview:report:edit']">编辑</el-button></el-col>
-      <el-col :span="1.5"><el-button type="danger" plain icon="el-icon-delete" size="mini" :disabled="multiple" @click="handleDelete" v-hasPermi="['interview:report:remove']">删除</el-button></el-col>
+      <el-col :span="1.5" v-if="deptLevel === 1 || deptLevel === 2"><el-button type="danger" plain icon="el-icon-delete" size="mini" :disabled="multiple" @click="handleDelete" v-hasPermi="['interview:report:remove']">删除</el-button></el-col>
       <right-toolbar :showSearch.sync="showSearch" @queryTable="getList"></right-toolbar>
     </el-row>
     <div class="table-wrapper-self">
@@ -87,7 +87,7 @@
           <template slot-scope="{ row }" >
             <el-button size="mini" type="text" icon="el-icon-view" @click="handleView(row)" v-hasPermi="['interview:report:view']">查看</el-button>
             <el-button size="mini" type="text" icon="el-icon-edit" @click="handleUpdate(row)" v-hasPermi="['interview:report:edit']">编辑</el-button>
-            <el-button size="mini" type="text" icon="el-icon-delete" @click="handleDelete(row)" v-hasPermi="['interview:report:remove']">删除</el-button>
+            <el-button size="mini" type="text" icon="el-icon-delete" @click="handleDelete(row)" v-hasPermi="['interview:report:remove']" v-if="deptLevel === 1 || deptLevel === 2">删除</el-button>
             <el-button size="mini" type="text" icon="el-icon-thumb" @click="handleArrive(row)">到场</el-button>
           </template>
         </el-table-column>

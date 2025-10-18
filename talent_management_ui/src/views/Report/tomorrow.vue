@@ -23,6 +23,11 @@
               <el-input v-model="queryParams.phone" placeholder="请输入电话" clearable @keyup.enter.native="handleQuery"/>
            </el-form-item>
         </el-col>
+        <el-col :span="4">
+          <el-form-item label="招聘人" prop="createName">
+            <el-input v-model="queryParams.createName" placeholder="请输入招聘人" clearable @keyup.enter.native="handleQuery"/>
+          </el-form-item>
+        </el-col>
         <el-col :span="4" align="right">
            <el-form-item>
               <el-button type="primary" icon="el-icon-search" size="mini" @click="handleQuery">搜索</el-button>
@@ -115,6 +120,7 @@ export default {
         locationName: undefined,
         name: undefined,
         phone: undefined,
+        createName: undefined,
       },
       // 登录人部门权限
       deptLevel: this.$store?.state?.user?.deptLevel || 0,

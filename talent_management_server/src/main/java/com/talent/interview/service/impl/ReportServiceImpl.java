@@ -8,6 +8,7 @@ import com.talent.common.utils.SecurityUtils;
 import com.talent.common.utils.StringUtils;
 import com.talent.common.utils.mybatisPlus.MyBatisBatchInsertHelper;
 import com.talent.interview.entity.Feedback;
+import com.talent.interview.entity.Location;
 import com.talent.interview.entity.Report;
 import com.talent.interview.mapper.FeedbackMapper;
 import com.talent.interview.mapper.ReportMapper;
@@ -72,6 +73,17 @@ public class ReportServiceImpl implements ReportService {
     @Transactional(rollbackFor = Exception.class)
     public AjaxResult saveOrUpdate(Report entity) {
 
+        // 先检查名称唯一性
+        Integer count = reportMapper.selectCount(
+                new LambdaQueryWrapper<Report>()
+                        .eq(Report::getPhone, entity.getPhone())
+                        .ne(entity.getId() != null, Report::getId, entity.getId()) // 如果是更新，排除自己
+        );
+
+        if (count != null && count > 0) {
+            return AjaxResult.error("手机号码已存在，请重新输入");
+        }
+
         // 处理历史数据
         if(null == entity.getSubDeptId() && StringUtils.isEmpty(entity.getSubDeptName())){
             entity.setSubDeptId(entity.getDeptId());
@@ -130,6 +142,7 @@ public class ReportServiceImpl implements ReportService {
         feedback.setRemark(info.getRemark());
 
         feedback.setCreateBy(info.getCreateBy());
+        feedback.setCreateName(info.getCreateName());
         feedback.setCreateTime(info.getCreateTime());
         feedback.setUpdateBy(info.getUpdateBy());
         feedback.setUpdateTime(info.getUpdateTime());
@@ -143,7 +156,7 @@ public class ReportServiceImpl implements ReportService {
                 new LambdaUpdateWrapper<Feedback>()
                         .eq(Feedback::getId, feedback.getId())
                         .set(Feedback::getCreateBy, info.getCreateBy())
-                        .set(Feedback::getCreateTime, info.getCreateTime())
+                        .set(Feedback::getCreateTime, new Date())
         );
 
         return AjaxResult.success();

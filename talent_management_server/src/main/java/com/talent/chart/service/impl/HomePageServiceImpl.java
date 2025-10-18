@@ -143,10 +143,11 @@ public class HomePageServiceImpl implements HomePageService {
 //        // 周结束：本周周日
 //        LocalDate weekEnd = weekStart.plusDays(6);
 
-        // 月起始：本月1号
-        LocalDate monthStart = now.withDayOfMonth(1);
-        // 月结束：本月最后一天
-        LocalDate monthEnd = now.withDayOfMonth(now.lengthOfMonth());
+        // 上个月的 1 号
+        LocalDate monthStart = now.minusMonths(1).withDayOfMonth(1);
+
+        // 上个月的最后一天
+        LocalDate monthEnd = now.minusMonths(1).withDayOfMonth(now.minusMonths(1).lengthOfMonth());
 
         // 分组统计：key=deptId+createBy + 先过滤掉没有面试日期的
         List<Feedback> validReports = feedbackList.stream()
@@ -157,20 +158,19 @@ public class HomePageServiceImpl implements HomePageService {
         Map<String, InvitationTop5> grouped = new HashMap<>();
 
         for (Feedback r : validReports) {
-            // 只统计是否计费；  是否计费为空的舍弃
-            if(StringUtils.isEmpty(r.getIsBilling())){
-                continue;
-            }
-            String key = r.getSubDeptId() + "_" + r.getCreateBy();
+            // 只统计是否计费为Y的；
+            if(StringUtils.isNotEmpty(r.getIsBilling()) && r.getIsBilling().equals(Constants.IS_DEL_Y)){
+                String key = r.getSubDeptId() + "_" + r.getCreateBy();
 
-            // 如果不存在就初始化
-            InvitationTop5 dto = grouped.get(key);
-            if (dto == null) {
-                dto = initDto(r, monthStart, monthEnd);
-                grouped.put(key, dto);
-            } else {
-                // 已存在则合并
-                mergeDto(dto, initDto(r, monthStart, monthEnd));
+                // 如果不存在就初始化
+                InvitationTop5 dto = grouped.get(key);
+                if (dto == null) {
+                    dto = initDto(r, monthStart, monthEnd);
+                    grouped.put(key, dto);
+                } else {
+                    // 已存在则合并
+                    mergeDto(dto, initDto(r, monthStart, monthEnd));
+                }
             }
         }
 

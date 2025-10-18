@@ -29,3 +29,17 @@ http://36.213.0.185:8090/
 admin 123456
 luanxiong 123456
 xuanxuan1 123456
+
+
+批量更新create_name字段
+UPDATE tb_interview_feedback f
+LEFT JOIN sys_user u ON f.create_by = u.user_name
+SET f.create_name = u.nick_name
+where f.del_flag = 'N' and u.del_flag = 'N'; 
+
+
+UPDATE tb_interview_report f
+LEFT JOIN sys_user u ON f.create_by = u.user_name
+SET f.create_name = u.nick_name
+where f.del_flag = 'N' and u.del_flag = 'N'; 
+
