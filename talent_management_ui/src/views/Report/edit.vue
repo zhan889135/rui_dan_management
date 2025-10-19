@@ -83,7 +83,7 @@
 </template>
 
 <script>
-import {getInfo, save} from "@/api/report";
+import {getInfo, save, verifyIsExist} from "@/api/report";
 import ContentRecognition from "@/components/ContentRecognition";
 import {getNickNameByUserName} from "@/utils/ruoyi";
 
@@ -181,19 +181,37 @@ export default {
     handleSubmit() {
       this.$refs.form.validate(valid => {
         if (!valid) return
-        this.loading = true;
-        this.btnLoading = true;
+
         const params = {
           ...this.form,
         };
-        save(params).then((response) => {
-          this.form = response.data
-          this.$modal.msgSuccess('保存成功')
-          this.handleClose()
-        }).finally(() =>{
-          this.loading = false;
-          this.btnLoading = false;
+
+        verifyIsExist(params).then((response) => {
+          // 说明有重复的
+          if(response.data === true){
+            this.$modal.confirm('手机号码重复,是否重复录入？').then(() => {
+              this.saveReportMethod(params);
+            });
+          }else{
+            // 保存面试报备
+            this.saveReportMethod(params);
+          }
         })
+
+      })
+    },
+
+    // 保存面试报备
+    saveReportMethod(params){
+      this.loading = true;
+      this.btnLoading = true;
+      save(params).then((response) => {
+        this.form = response.data
+        this.$modal.msgSuccess('保存成功')
+        this.handleClose()
+      }).finally(() =>{
+        this.loading = false;
+        this.btnLoading = false;
       })
     },
 

@@ -73,17 +73,6 @@ public class ReportServiceImpl implements ReportService {
     @Transactional(rollbackFor = Exception.class)
     public AjaxResult saveOrUpdate(Report entity) {
 
-        // 先检查名称唯一性
-        Integer count = reportMapper.selectCount(
-                new LambdaQueryWrapper<Report>()
-                        .eq(Report::getPhone, entity.getPhone())
-                        .ne(entity.getId() != null, Report::getId, entity.getId()) // 如果是更新，排除自己
-        );
-
-        if (count != null && count > 0) {
-            return AjaxResult.error("手机号码已存在，请重新输入");
-        }
-
         // 处理历史数据
         if(null == entity.getSubDeptId() && StringUtils.isEmpty(entity.getSubDeptName())){
             entity.setSubDeptId(entity.getDeptId());
@@ -160,5 +149,21 @@ public class ReportServiceImpl implements ReportService {
         );
 
         return AjaxResult.success();
+    }
+
+    /**
+     * 校验手机号是否存在
+     */
+    @Override
+    public AjaxResult verifyIsExist(Report entity) {
+        // 先检查名称唯一性
+        Integer count = reportMapper.selectCount(
+                new LambdaQueryWrapper<Report>()
+                        .eq(Report::getPhone, entity.getPhone())
+                        .eq(Report::getSubDeptId, entity.getSubDeptId())
+                        .ne(entity.getId() != null, Report::getId, entity.getId()) // 如果是更新，排除自己
+        );
+
+        return AjaxResult.success(count != null && count > 0);
     }
 }

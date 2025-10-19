@@ -5,6 +5,7 @@ import com.talent.common.controller.BaseController;
 import com.talent.common.domain.AjaxResult;
 import com.talent.common.page.TableDataInfo;
 import com.talent.common.utils.poi.ExcelUtil;
+import com.talent.interview.entity.Feedback;
 import com.talent.interview.entity.Report;
 import com.talent.interview.service.ReportService;
 import com.talent.system.config.annotation.Log;
@@ -84,5 +85,13 @@ public class ReportController extends BaseController {
     @PostMapping("/personToFeedback")
     public AjaxResult personToFeedback(@RequestBody Report entity) {
         return service.personToFeedback(entity);
+    }
+
+    /**
+     * 校验手机号是否存在
+     */
+    @PostMapping("/verifyIsExist")
+    public AjaxResult verifyIsExist(@RequestBody Report entity) {
+        return service.verifyIsExist(entity);
     }
 }

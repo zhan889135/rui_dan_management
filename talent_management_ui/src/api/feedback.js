@@ -44,3 +44,11 @@ export function secondPushData(query) {
   })
 }
 
+// 校验手机号是否存在
+export function verifyIsExist(data) {
+  return request({
+    url: '/interview/feedback/verifyIsExist',
+    method: 'post',
+    data: data
+  })
+}

@@ -224,7 +224,7 @@ import {
 import { getToken } from "@/utils/auth";
 import ContentRecognition from "@/components/ContentRecognition/indexSpeak.vue";
 import {save} from "@/api/report";
-import {delData} from "@/api/feedback";
+import {delData, verifyIsExist} from "@/api/feedback";
 import EditDialog from "@/views/Feedback/edit.vue";
 import {allListNoDept} from "@/api/location";
 import axios from "axios";
@@ -617,7 +617,6 @@ export default {
 
     /** 识别内容 */
     recognitionForm(val) {
-      this.saveInvitationLoading = true;
       // 只更新 val 里有的字段
       Object.keys(val).forEach(key => {
         if (val[key] !== undefined && val[key] !== null && val[key] !== '') {
@@ -628,7 +627,22 @@ export default {
       // ✅ 特别处理：如果传入了 phone，进行清洗和校验
       this.cleanPhone();
 
-      // 保存面试反馈信息
+      verifyIsExist(this.speakForm).then((response) => {
+        // 说明有重复的
+        if(response.data === true){
+          this.$modal.confirm('手机号码重复,是否重复录入？').then(() => {
+            this.saveInvitationInfoMethod();
+          });
+        }else{
+          // 保存面试反馈信息
+          this.saveInvitationInfoMethod();
+        }
+      })
+    },
+
+    // 保存面试反馈信息
+    saveInvitationInfoMethod(){
+      this.saveInvitationLoading = true;
       saveInvitationInfo(this.speakForm).then((response) => {
         this.$modal.msgSuccess('保存成功')
       }).finally(() =>{

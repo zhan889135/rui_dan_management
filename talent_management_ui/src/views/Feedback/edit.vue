@@ -167,7 +167,7 @@
 </template>
 
 <script>
-import { save , getInfo } from "@/api/feedback";
+import {save, getInfo, verifyIsExist} from "@/api/feedback";
 import { getNickNameByUserName } from "@/utils/ruoyi";
 import dayjs from "dayjs";
 
@@ -360,8 +360,6 @@ export default {
     handleSubmit() {
       this.$refs.form.validate(valid => {
         if (!valid) return
-        this.loading = true;
-        this.btnLoading = true;
         const params = {
           ...this.form,
         };
@@ -377,14 +375,33 @@ export default {
           params.level2Person = this.$store?.state?.user?.userName;
           params.level2Time  = dayjs().format("YYYY-MM-DD HH:mm:ss");
         }
-        save(params).then((response) => {
-          this.form = response.data
-          this.$modal.msgSuccess('保存成功')
-          this.handleClose()
-        }).finally(() =>{
-          this.loading = false;
-          this.btnLoading = false;
+
+        verifyIsExist(params).then((response) => {
+          // 说明有重复的
+          if(response.data === true){
+            this.$modal.confirm('手机号码重复,是否重复录入？').then(() => {
+              this.saveInvitationInfoMethod(params);
+            });
+          }else{
+            // 保存面试反馈信息
+            this.saveInvitationInfoMethod(params);
+          }
         })
+
+      })
+    },
+
+    // 保存面试反馈信息
+    saveInvitationInfoMethod(params){
+      this.loading = true;
+      this.btnLoading = true;
+      save(params).then((response) => {
+        this.form = response.data
+        this.$modal.msgSuccess('保存成功')
+        this.handleClose()
+      }).finally(() =>{
+        this.loading = false;
+        this.btnLoading = false;
       })
     },
 

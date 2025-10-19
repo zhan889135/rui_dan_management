@@ -92,17 +92,6 @@ public class FeedbackServiceImpl implements FeedbackService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public AjaxResult saveOrUpdate(Feedback entity) {
-        // 先检查名称唯一性
-        Integer count = feedbackMapper.selectCount(
-                new LambdaQueryWrapper<Feedback>()
-                        .eq(Feedback::getPhone, entity.getPhone())
-                        .ne(entity.getId() != null, Feedback::getId, entity.getId()) // 如果是更新，排除自己
-        );
-
-        if (count != null && count > 0) {
-            return AjaxResult.error("手机号码已存在，请重新输入");
-        }
-
         if (entity.getId() == null) {
             entity.setCreateName(SecurityUtils.getLoginUser().getUser().getNickName());
             feedbackMapper.insert(entity);
@@ -359,5 +348,21 @@ public class FeedbackServiceImpl implements FeedbackService {
         });
 
         return AjaxResult.success("second Data Push Success!");
+    }
+
+    /**
+     * 校验手机号是否存在
+     */
+    @Override
+    public AjaxResult verifyIsExist(Feedback entity) {
+        // 先检查名称唯一性
+        Integer count = feedbackMapper.selectCount(
+                new LambdaQueryWrapper<Feedback>()
+                        .eq(Feedback::getPhone, entity.getPhone())
+                        .eq(Feedback::getSubDeptId, entity.getSubDeptId())
+                        .ne(entity.getId() != null, Feedback::getId, entity.getId()) // 如果是更新，排除自己
+        );
+
+        return AjaxResult.success(count != null && count > 0);
     }
 }

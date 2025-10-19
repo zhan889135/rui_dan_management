@@ -35,4 +35,9 @@ public interface ReportService {
      * 人员到达现场,推送至人员报备
      */
     AjaxResult personToFeedback(Report entity);
+
+    /**
+     * 校验手机号是否存在
+     */
+    AjaxResult verifyIsExist(Report entity);
 }

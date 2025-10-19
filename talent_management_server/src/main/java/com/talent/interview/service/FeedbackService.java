@@ -42,4 +42,9 @@ public interface FeedbackService {
      * 二级一键推送数据
      */
     AjaxResult secondPushData(Feedback entity);
+
+    /**
+     * 校验手机号是否存在
+     */
+    AjaxResult verifyIsExist(Feedback entity);
 }

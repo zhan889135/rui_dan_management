@@ -238,18 +238,6 @@ public class SpeakServiceImpl implements SpeakService {
      */
     @Override
     public AjaxResult saveInvitationInfo(Feedback entity) {
-
-        // 先检查名称唯一性
-        Integer count = feedbackMapper.selectCount(
-                new LambdaQueryWrapper<Feedback>()
-                        .eq(Feedback::getPhone, entity.getPhone())
-                        .ne(entity.getId() != null, Feedback::getId, entity.getId()) // 如果是更新，排除自己
-        );
-
-        if (count != null && count > 0) {
-            return AjaxResult.error("手机号码已存在，请重新输入");
-        }
-
         // 上找二级部门
         DeptPermissionUtil.DeptInfo deptInfo = DeptPermissionUtil.findSecondLevelDept(entity.getSubDeptId(), entity.getSubDeptName());
         entity.setCreateName(SecurityUtils.getLoginUser().getUser().getNickName());

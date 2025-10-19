@@ -108,4 +108,13 @@ public class FeedbackController extends BaseController {
     public AjaxResult secondPushData(Feedback entity) {
         return service.secondPushData(entity);
     }
+
+
+    /**
+     * 校验手机号是否存在
+     */
+    @PostMapping("/verifyIsExist")
+    public AjaxResult verifyIsExist(@RequestBody Feedback entity) {
+        return service.verifyIsExist(entity);
+    }
 }

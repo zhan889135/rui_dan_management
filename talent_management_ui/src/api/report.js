@@ -52,3 +52,12 @@ export function personToFeedback(data) {
     data: data
   })
 }
+
+// 校验手机号是否存在
+export function verifyIsExist(data) {
+  return request({
+    url: '/interview/report/verifyIsExist',
+    method: 'post',
+    data: data
+  })
+}
