@@ -175,7 +175,7 @@
     </div>
     <pagination v-show="total>0" :total="total" :page.sync="queryParams.pageNum" :limit.sync="queryParams.pageSize" @pagination="getList"/>
     <!-- 编辑 -->
-    <EditDialog ref="editDialog" @refresh="getList" @close="handleClose" :dict-map="dict.type" :user-list="userList" :location-list="locationList"/>
+    <EditDialog ref="editDialog" @refresh="getList" @close="handleClose" :dict-map="dict.type" :user-list="userList" :location-list="locationList" :dept-level3-list="deptLevel3List"/>
     <!-- 详情 -->
     <DetailDialog ref="detailDialog" @refresh="getList" @close="handleClose" :dict-map="dict.type" :user-list="userList"/>
 
@@ -213,6 +213,7 @@ import DetailDialog from "@/views/Feedback/detail.vue";
 import {listUserKv} from "@/api/system/user";
 import {getToken} from "@/utils/auth";
 import {allListNoDept} from "@/api/location";
+import {listDept} from "@/api/system/dept";
 
 export default {
   name: "Report",
@@ -224,6 +225,7 @@ export default {
       deptLevel: this.$store?.state?.user?.deptLevel,
       userList: [], // 用户列表，转义userName
       locationList: [], // 查询点位名称
+      deptLevel3List: [], // 三级部门列表
       // 遮罩层
       loading: true,
       // 选中数组
@@ -273,6 +275,7 @@ export default {
     this.getList();
     this.getUserList();
     this.getLocationList()
+    this.getDeptLevel3List()
   },
   methods: {
     /** 查询用户列表 */
@@ -283,6 +286,11 @@ export default {
     /** 查询当前供应商,所关联的点位 */
     getLocationList() {
       allListNoDept({ deptId : this.$store.state.user.deptId }).then(response => this.locationList = response.data)
+    },
+
+    /** 查询三级部门列表 */
+    getDeptLevel3List() {
+      listDept({ deptLevel : 3 }).then(response => this.deptLevel3List = response.data)
     },
 
     /** 查询列表（分为三个列表，deptLevel：1总部，能看所有的，2供应商，能看总部推送的，3员工，能看供应商推送的） */

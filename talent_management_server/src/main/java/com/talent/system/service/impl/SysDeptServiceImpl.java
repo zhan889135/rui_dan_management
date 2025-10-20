@@ -71,6 +71,7 @@ public class SysDeptServiceImpl implements ISysDeptService
                 new LambdaQueryWrapper<SysDept>()
                         .like(StringUtils.isNotEmpty(dept.getDeptName()), SysDept::getDeptName, dept.getDeptName())
                         .eq(StringUtils.isNotEmpty(dept.getStatus()), SysDept::getStatus, dept.getStatus())
+                        .eq(null != dept.getDeptLevel(), SysDept::getDeptLevel, dept.getDeptLevel())
                         .orderByAsc(SysDept::getOrderNum)
         );
 

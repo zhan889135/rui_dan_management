@@ -15,10 +15,12 @@ import com.talent.interview.entity.Report;
 import com.talent.interview.mapper.FeedbackMapper;
 import com.talent.interview.mapper.LocationMapper;
 import com.talent.interview.service.FeedbackService;
+import com.talent.interview.utils.DeptPermissionUtil;
 import com.talent.interview.utils.ExcelUtils;
 import com.talent.interview.utils.LambdaQueryBuilderUtil;
 import com.talent.system.entity.SysDept;
 import com.talent.system.entity.SysDictData;
+import com.talent.system.entity.login.LoginUser;
 import com.talent.system.mapper.SysDeptMapper;
 import com.talent.system.mapper.SysDictDataMapper;
 import org.apache.poi.ss.usermodel.*;
@@ -96,7 +98,40 @@ public class FeedbackServiceImpl implements FeedbackService {
             entity.setCreateName(SecurityUtils.getLoginUser().getUser().getNickName());
             feedbackMapper.insert(entity);
         } else {
+
             MyBatisBatchInsertHelper.updateAllFieldsById(entity, feedbackMapper);
+
+            // 如果是总部门账号，要修改招聘人 和 所属供应商
+            LoginUser loginUser = SecurityUtils.getLoginUser();
+            Integer deptLevel = loginUser.getDeptLevel();
+            if(null != deptLevel && Constants.RET_CODE_1_NUM == deptLevel){
+
+                // 上找二级部门
+                DeptPermissionUtil.DeptInfo deptInfo = DeptPermissionUtil.findSecondLevelDept(entity.getSubDeptId(), entity.getSubDeptName());
+
+                entity.setDeptId(deptInfo.getDeptId());
+                entity.setDeptName(deptInfo.getDeptName());
+
+                // 强制更新创建人属性
+                if(StringUtils.isNotEmpty(entity.getCreateBy())){
+                    feedbackMapper.update(
+                            null,
+                            new LambdaUpdateWrapper<Feedback>()
+                                    .eq(Feedback::getId, entity.getId())
+                                    .set(Feedback::getCreateBy, entity.getCreateBy())
+                                    .set(Feedback::getCreateName, entity.getCreateName())
+                                    .set(Feedback::getSubDeptId, entity.getSubDeptId())
+                                    .set(Feedback::getSubDeptName, entity.getSubDeptName())
+                                    .set(Feedback::getDeptId, entity.getDeptId())
+                                    .set(Feedback::getDeptName, entity.getDeptName())
+                                    .set(Feedback::getUpdateBy, loginUser.getUsername())
+                                    .set(Feedback::getUpdateTime, new Date())
+                    );
+                }
+            }
+
+
+
         }
         return AjaxResult.success(entity);
     }

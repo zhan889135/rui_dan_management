@@ -132,28 +132,33 @@
             </span>
 
 
-
-
-
-
-
-
-
-
-
-            <el-col :span="12">
-              <el-form-item label="招聘人" prop="createBy">
-                <el-input :value="getNickNameByUserName(form.createBy, userList)" disabled/>
-              </el-form-item>
-            </el-col>
-
+            <!--  总部门可以更改招聘人和归属供应商    -->
             <span v-if="deptLevel === 1">
               <el-col :span="12">
-                <el-form-item label="归属供应商" prop="deptName">
-                  <el-input v-model="form.deptName" placeholder="请输入归属供应商" maxlength="50" disabled/>
+                <el-form-item label="招聘人" prop="createBy">
+                  <el-select v-model="form.createBy" placeholder="招聘人" style="width: 100%" @change="handleCreateByChange">
+                    <el-option v-for="(item, index) in userList" :key="index" :label="item.nickName" :value="item.userName"/>
+                  </el-select>
+                </el-form-item>
+              </el-col>
+              <el-col :span="12">
+                <el-form-item label="归属供应商" prop="subDeptId">
+                  <el-select v-model="form.subDeptId" placeholder="归属供应商" style="width: 100%" @change="handleSubDeptChange">
+                    <el-option v-for="(item, index) in deptLevel3List" :key="index" :label="item.deptName" :value="item.deptId"/>
+                  </el-select>
                 </el-form-item>
               </el-col>
             </span>
+
+            <!--  二级和三级只显示    -->
+            <span v-if="deptLevel === 2 || deptLevel === 3">
+              <el-col :span="12">
+                <el-form-item label="招聘人" prop="createBy">
+                  <el-input :value="getNickNameByUserName(form.createBy, userList)" disabled/>
+                </el-form-item>
+              </el-col>
+            </span>
+
           </el-row>
         </div>
       </el-form>
@@ -177,6 +182,7 @@ export default {
     dictMap: { type: Object, default: () => ({}) },
     userList: { type: Array, default: () => [] },
     locationList: { type: Array, default: () => [] },
+    deptLevel3List: { type: Array, default: () => [] },
   },
 
   data() {
@@ -227,6 +233,10 @@ export default {
 
         // 创建人
         createBy:undefined,
+        createName:undefined,
+        // 归属供应商
+        subDeptId:undefined,
+        subDeptName:undefined,
       },
       // 表单验证规则
       rules: {
@@ -421,6 +431,32 @@ export default {
     changeLocation(val){
       this.form.locationName = this.locationList?.find(item => item.id === val)?.name
     },
+
+    /** 下拉切换用户选择 */
+    handleCreateByChange(value) {
+      // 根据 value 找到对应的用户
+      const user = this.userList.find(item => item.userName === value);
+      if (user) {
+        this.form.createBy = user.userName;
+        this.form.createName = user.nickName;
+      } else {
+        this.form.createBy = undefined;
+        this.form.createName = undefined;
+      }
+    },
+
+    /** 下拉切换部门选择 */
+    handleSubDeptChange(value) {
+      // 根据 value 找到对应的部门
+      const dept = this.deptLevel3List.find(item => item.deptId === value);
+      if (dept) {
+        this.form.subDeptId = dept.deptId;
+        this.form.subDeptName = dept.deptName;
+      } else {
+        this.form.subDeptId = undefined;
+        this.form.subDeptName = undefined;
+      }
+    }
   }
 }
 </script>
