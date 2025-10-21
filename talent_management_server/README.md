@@ -2,11 +2,11 @@
 在 IDEA 的 Terminal（终端） 里进入目录执行： git rm -r --cached target，然后提交代码
 
 
-推送连接超时：多试试就好了
+设置代理
 
-设置代理：
-git config --global http.proxy 'proxy-url'
-git config --global https.proxy 'proxy-url'
+查看系统端口号: 打开“设置 -> 网络和Internet -> 代理”，记录下当前的端口号。
+git config --global http.proxy 127.0.0.1:7890
+git config --global https.proxy 127.0.0.1:7890
 
 删除代理：
 git config --global --unset http.proxy
