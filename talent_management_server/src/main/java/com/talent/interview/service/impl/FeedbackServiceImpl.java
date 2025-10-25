@@ -71,16 +71,6 @@ public class FeedbackServiceImpl implements FeedbackService {
     }
 
     /**
-     * 条件查询（分页）
-     */
-    @Override
-    public List<Feedback> queryPage(Feedback entity) {
-        LambdaQueryWrapper<Feedback> wrapper = LambdaQueryBuilderUtil.buildFeedbackQueryWrapper(entity);
-        startPage();
-        return feedbackMapper.selectList(wrapper);
-    }
-
-    /**
      * 根据ID获取详细信息
      */
     @Override

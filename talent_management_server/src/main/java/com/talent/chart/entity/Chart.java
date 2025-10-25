@@ -17,4 +17,7 @@ public class Chart {
     /** value */
     private String value;
 
+    /** 统计图 X / Y 坐标 */
+    private String[] x;
+    private Integer[] y;
 }

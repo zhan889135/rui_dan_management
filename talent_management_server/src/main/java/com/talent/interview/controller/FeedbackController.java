@@ -4,6 +4,7 @@ import com.talent.common.constant.BusinessType;
 import com.talent.common.constant.Constants;
 import com.talent.common.controller.BaseController;
 import com.talent.common.domain.AjaxResult;
+import com.talent.common.page.PageUtils;
 import com.talent.common.page.TableDataInfo;
 import com.talent.common.utils.SecurityUtils;
 import com.talent.common.utils.poi.ExcelUtil;
@@ -11,6 +12,7 @@ import com.talent.interview.entity.Feedback;
 import com.talent.interview.entity.FeedbackDept3Excel;
 import com.talent.interview.entity.Location;
 import com.talent.interview.service.FeedbackService;
+import com.talent.interview.utils.StatisticsUtil;
 import com.talent.system.config.annotation.Log;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +22,7 @@ import org.springframework.web.multipart.MultipartFile;
 import javax.servlet.http.HttpServletResponse;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * 面试反馈
@@ -36,8 +39,11 @@ public class FeedbackController extends BaseController {
      */
     @GetMapping("/query")
     public TableDataInfo query(Feedback entity) {
-        List<Feedback> list = service.queryPage(entity);
-        return getDataTable(list);
+        List<Feedback> fullList = service.queryList(entity); // 包含手动分页后的结果
+        // 调用工具类查询总数：
+        Map<String, String> map = StatisticsUtil.calculateFeedbackStats(fullList);
+        List<Feedback> pageList = PageUtils.manualSubList(fullList);   // 手动分页子集
+        return getDataTable(pageList, fullList.size(), map); // 这里传原始总数
     }
 
     /**

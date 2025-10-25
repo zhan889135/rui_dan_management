@@ -16,7 +16,6 @@ public interface FeedbackService {
      * 查询数据
      */
     List<Feedback> queryList(Feedback entity);
-    List<Feedback> queryPage(Feedback entity);
 
     /**
      * 根据ID获取详细信息

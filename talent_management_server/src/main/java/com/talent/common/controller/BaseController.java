@@ -79,14 +79,13 @@ public class BaseController
     /**
      * 自定义返回数据
      */
-    @SuppressWarnings({ "rawtypes", "unchecked" })
-    protected TableDataInfo getDataTable(List<?> list, Map<String, String> map)
+    protected TableDataInfo getDataTable(List<?> list, int total, Map<String, String> map)
     {
         TableDataInfo rspData = new TableDataInfo();
         rspData.setCode(HttpStatus.SUCCESS);
         rspData.setMsg("查询成功");
         rspData.setRows(list);
-        rspData.setTotal(new PageInfo(list).getTotal());
+        rspData.setTotal(total); // 原始总数
         rspData.setMap(map);
         return rspData;
     }

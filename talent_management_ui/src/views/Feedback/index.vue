@@ -110,6 +110,12 @@
       <el-col :span="1.5"><el-button type="warning" plain icon="el-icon-download" size="mini" @click="handleExport" >导出</el-button></el-col>
       <el-col :span="1.5"><el-button type="warning" plain icon="el-icon-upload2" size="mini" @click="pushExport" v-if="deptLevel === 2">一键推送</el-button></el-col>
       <el-col :span="1.5" v-if="deptLevel === 1"><el-button type="danger" plain icon="el-icon-delete" size="mini" :disabled="multiple" @click="handleDelete">删除</el-button></el-col>
+
+      <el-col :span="1.5"><span class="card-sum"><i class="el-icon-user-solid"></i>总送人数：<span class="sum-number">{{ statistics.totalCount }}</span></span></el-col>
+      <el-col :span="1.5"><span class="card-sum"><i class="el-icon-s-help"></i>硬性人数：<span class="sum-number">{{ statistics.hardRequirementsYesCount }}</span></span></el-col>
+      <el-col :span="1.5"><span class="card-sum"><i class="el-icon-s-marketing"></i>计费人数：<span class="sum-number">{{ statistics.isBillingYesCount }}</span></span></el-col>
+      <el-col :span="1.5"><span class="card-sum"><i class="el-icon-warning"></i>未出人数：<span class="sum-number">{{ statistics.bothNullCount }}</span></span></el-col>
+
       <right-toolbar :showSearch.sync="showSearch" @queryTable="getList"></right-toolbar>
     </el-row>
     <div class="table-wrapper-self">
@@ -240,6 +246,13 @@ export default {
       total: 0,
       // 表格数据
       dataSource: [],
+      // 统计总数
+      statistics: {
+        totalCount: 0,
+        hardRequirementsYesCount: 0,
+        isBillingYesCount: 0,
+        bothNullCount: 0,
+      },
       // 查询参数
       queryParams: {
         pageNum: 1,
@@ -299,6 +312,13 @@ export default {
       list(this.queryParams).then(response => {
         this.dataSource = response.rows;
         this.total = response.total;
+
+        // 统计总数
+        this.statistics.totalCount = response.map.totalCount;
+        this.statistics.hardRequirementsYesCount = response.map.hardRequirementsYesCount;
+        this.statistics.isBillingYesCount = response.map.isBillingYesCount;
+        this.statistics.bothNullCount = response.map.bothNullCount;
+
         this.loading = false;
       });
     },
@@ -412,3 +432,37 @@ export default {
   }
 };
 </script>
+<style lang="scss" scoped>
+// 合计统计
+.card-sum {
+  //cursor: pointer;
+  font-weight: 700;
+  background: #e8f9f0; /* 柔和的绿色底 */
+  color: #2e7d32;      /* 深绿色文字 */
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 15px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  line-height: 1.28;
+  transition: all 0.25s ease;
+}
+
+.card-sum:hover {
+  background: #d3f3e0;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+}
+
+.card-sum i {
+  font-size: 14px;
+  color: #43a047;
+}
+
+.sum-number {
+  font-weight: 700;
+  font-size: 15px;
+  color: #1b5e20;
+  margin-left: 2px;
+}
+</style>
