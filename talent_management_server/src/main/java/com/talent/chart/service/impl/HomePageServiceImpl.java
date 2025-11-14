@@ -138,16 +138,22 @@ public class HomePageServiceImpl implements HomePageService {
 
         // 时间范围：本周、本月
         LocalDate now = LocalDate.now();
+
 //        // 周起始：本周周一
 //        LocalDate weekStart = now.with(DayOfWeek.MONDAY);
 //        // 周结束：本周周日
 //        LocalDate weekEnd = weekStart.plusDays(6);
 
-        // 上个月的 1 号
-        LocalDate monthStart = now.minusMonths(1).withDayOfMonth(1);
+//        // 上个月的 1 号
+//        LocalDate monthStart = now.minusMonths(1).withDayOfMonth(1);
+         // 上个月的最后一天
+//        LocalDate monthEnd = now.minusMonths(1).withDayOfMonth(now.minusMonths(1).lengthOfMonth());
 
-        // 上个月的最后一天
-        LocalDate monthEnd = now.minusMonths(1).withDayOfMonth(now.minusMonths(1).lengthOfMonth());
+        // 这个月的 1 号
+        LocalDate monthStart = now.withDayOfMonth(1);
+
+        // 这个月的最后一天
+        LocalDate monthEnd = now.withDayOfMonth(now.lengthOfMonth());
 
         // 分组统计：key=deptId+createBy + 先过滤掉没有面试日期的
         List<Feedback> validReports = feedbackList.stream()

@@ -1016,7 +1016,6 @@ export default {
   padding:0 5px 5px 5px;
 }
 
-
 .chat-messages {
   position: relative;
   overflow-y: auto;
@@ -1033,7 +1032,7 @@ export default {
     display: flex;
     justify-content: flex-start;
     align-items: center;
-    margin-bottom: 5px;
+    margin-bottom: 13px;
 
     &.mine {
       justify-content: flex-end;

@@ -29,4 +29,10 @@ public class StatisticsController {
      */
     @GetMapping("/personBillingCount")
     public AjaxResult personBillingCount(StatisticsQuery entity) { return service.personBillingCount(entity); }
+
+    /**
+     * 统计分析 - 后加的计费率
+     */
+    @GetMapping("/rateCalculation")
+    public AjaxResult rateCalculation(StatisticsQuery entity) { return service.rateCalculation(entity); }
 }

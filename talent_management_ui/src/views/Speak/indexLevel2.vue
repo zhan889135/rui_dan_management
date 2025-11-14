@@ -259,6 +259,7 @@
             <el-table stripe :data="invitationInfoData" v-loading="invitationInfoLoading" height="368">
               <el-table-column type="index" label="序号" width="50" align="center"/>
               <el-table-column label="面试点位" align="center" prop="locationName" show-overflow-tooltip/>
+              <el-table-column label="招聘人" align="center" prop="createName" width="110"/>
               <el-table-column label="姓名" align="center" prop="name" width="80"/>
               <el-table-column label="电话" align="center" prop="phone" width="110"/>
               <el-table-column label="年龄" align="center" prop="age" width="50"/>
@@ -997,7 +998,7 @@ export default {
     display: flex;
     justify-content: flex-start;
     align-items: center;
-    margin-bottom: 5px;
+    margin-bottom: 13px;
 
     &.mine {
       justify-content: flex-end;

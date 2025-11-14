@@ -21,6 +21,7 @@
               <el-col :span="24"><el-form-item label="反馈原因："><div class="detail-cell-modality-textarea">{{ form.reason }}</div></el-form-item></el-col>
               <el-col :span="12"><el-form-item label="硬性条件："><dict-tag :options="dictMap.sys_judge" :value="form.hardRequirements" /></el-form-item></el-col>
               <el-col :span="12"><el-form-item label="是否计费："><dict-tag :options="dictMap.sys_judge" :value="form.isBilling" /></el-form-item></el-col>
+              <el-col :span="24"><el-form-item label="备注："><div class="detail-cell-modality-textarea">{{ form.remark }}</div></el-form-item></el-col>
             </span>
 
             <!--供应商权限-->
@@ -32,6 +33,7 @@
               <el-col :span="24"><el-form-item label="反馈原因："><div class="detail-cell-modality-textarea">{{ form.reason2 }}</div></el-form-item></el-col>
               <el-col :span="12"><el-form-item label="硬性条件："><dict-tag :options="dictMap.sys_judge" :value="form.hardRequirements2" /></el-form-item></el-col>
               <el-col :span="12"><el-form-item label="是否计费："><dict-tag :options="dictMap.sys_judge" :value="form.isBilling2" /></el-form-item></el-col>
+              <el-col :span="24"><el-form-item label="备注："><div class="detail-cell-modality-textarea">{{ form.remark }}</div></el-form-item></el-col>
             </span>
 
             <!--三级员工权限-->

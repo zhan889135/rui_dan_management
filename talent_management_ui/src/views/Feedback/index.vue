@@ -138,6 +138,7 @@
           </template>
          </el-table-column>
         <el-table-column label="面试日期" align="center" prop="interviewDate" width="100" show-overflow-tooltip/>
+        <el-table-column label="备注" align="center" prop="remark" show-overflow-tooltip width="120"/>
 
         <!--总部门权限-->  <!--供应商权限-->
         <span v-if="deptLevel === 1 || deptLevel === 2">

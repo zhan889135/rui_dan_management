@@ -870,7 +870,7 @@ export default {
     display: flex;
     justify-content: flex-start;
     align-items: center;
-    margin-bottom: 5px;
+    margin-bottom: 13px;
 
     &.mine {
       justify-content: flex-end;

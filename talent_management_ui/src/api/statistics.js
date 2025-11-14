@@ -18,3 +18,12 @@ export function personBillingCount(query) {
     params: query
   })
 }
+
+// 统计分析 - 后加的计费率
+export function rateCalculation(query) {
+  return request({
+    url: '/chart/statistics/rateCalculation',
+    method: 'get',
+    params: query
+  })
+}

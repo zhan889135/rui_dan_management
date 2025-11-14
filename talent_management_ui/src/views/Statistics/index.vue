@@ -56,6 +56,23 @@
         <div class="chart-title">招聘人统计</div>
         <div ref="chart2" class="chart"></div>
       </div>
+
+      <!-- 最底部又新增了计费情况表格，炸开啊 -->
+      <div class="chart-card" v-loading="loading3" v-if="deptLevel === 1">
+        <div class="chart-title">计费情况</div>
+        <el-table :data="billingTableData" border style="width: 100%" :summary-method="getSummaries" show-summary>
+          <el-table-column prop="locationName" label="点位" align="center" min-width="120" />
+          <el-table-column prop="totalSent" label="总送人数" align="center" min-width="100" />
+          <el-table-column prop="hardRequirementNotMet" label="硬性条件不符" align="center" min-width="120" />
+          <el-table-column prop="remainingDenominator" label="剩余分母人数" align="center" min-width="120" />
+          <el-table-column prop="billedCount" label="计费人数" align="center" min-width="100" />
+          <el-table-column prop="billingRate" label="计费率" align="center" min-width="100">
+            <template #default="scope">
+              {{ scope.row.billingRate }}%
+            </template>
+          </el-table-column>
+        </el-table>
+      </div>
     </div>
 
   </div>
@@ -64,7 +81,7 @@
 <script>
 import { allListNoDept } from "@/api/location";
 import { listDept } from "@/api/system/dept";
-import { deptBillingCount, personBillingCount } from "@/api/statistics";
+import {deptBillingCount, personBillingCount, rateCalculation} from "@/api/statistics";
 import * as echarts from "echarts";
 
 export default {
@@ -85,6 +102,7 @@ export default {
 
       loading1: false,
       loading2: false,
+      loading3: false,
       chart1: null,
       chart2: null,
       flowInterval: null,
@@ -95,15 +113,31 @@ export default {
       },
 
       chartData2:{
-        x: ['张三', '李四', '五', '二', '一'],
-        y: [33, 20, 15, 5, 3],
+        /** 招聘人 */
+        createNameData: ['张三', '李四', '五', '二', '一'],
+        /** 硬性条件人数 */
+        hardRequirementsData: [1, 1, 1, 1, 1],
+        /** 不合格人数 */
+        unqualifiedData: [2, 2, 2, 2, 2],
+        /** 通过人数 */
+        passedData: [3, 3, 3, 3, 3],
+        /** 总送人数 */
+        totalData: [4, 4, 4, 4, 4],
+        /** 计费率 */
+        billingRateData: [5, 5, 5, 5, 5],
       },
+
+      // 计费情况表格...
+      billingTableData: []
     };
   },
   created() {
     this.getLocationList();
     this.getDeptLevel3List();
-    this.getList();
+
+    this.$nextTick(() => {
+      this.getList();
+    });
   },
   mounted() {
     window.addEventListener('resize', this.handleResize);
@@ -141,16 +175,34 @@ export default {
         if(this.queryParams.deptId){
           this.loading2 = true;
           personBillingCount(this.queryParams).then(response => {
-            this.chartData2.x = response.data?.x || [];
-            this.chartData2.y = response.data?.y || [];
+
+            this.chartData2.createNameData = response.data?.createNameData || [];
+            this.chartData2.hardRequirementsData = response.data?.hardRequirementsData || [];
+            this.chartData2.unqualifiedData = response.data?.unqualifiedData || [];
+            this.chartData2.passedData = response.data?.passedData || [];
+            this.chartData2.totalData = response.data?.totalData || [];
+            this.chartData2.billingRateData = response.data?.billingRateData || [];
+
             this.initChart2();
             this.loading2 = false;
           });
         }else{
-          this.chartData2.x = [];
-          this.chartData2.y = [];
+          this.chartData2.createNameData = [];
+          this.chartData2.hardRequirementsData = [];
+          this.chartData2.unqualifiedData = [];
+          this.chartData2.passedData = [];
+          this.chartData2.totalData = [];
+          this.chartData2.billingRateData = [];
           this.initChart2();
         }
+
+        // 计费率表格
+        this.loading3 = true;
+        this.billingTableData = [];
+        rateCalculation(this.queryParams).then(response => {
+          this.billingTableData = response.data?.billingTableData || [];
+          this.loading3 = false;
+        });
       }
 
       // 供应商看到一个
@@ -321,176 +373,84 @@ export default {
       this.chart2 = echarts.init(this.$refs.chart2);
 
       // ========== 数据 ==========
-      const xData = this.chartData2.x;
-      const yData = this.chartData2.y;
-      const title = '人数';
+      /** 招聘人 */
+      let createNameData = this.chartData2.createNameData;
+      /** 硬性条件人数 */
+      let hardRequirementsData = this.chartData2.hardRequirementsData;
+      /** 不合格人数 */
+      let unqualifiedData = this.chartData2.unqualifiedData;
+      /** 通过人数 */
+      let passedData = this.chartData2.passedData;
+      /** 总人数 */
+      let totalData = this.chartData2.totalData;
+      /** 计费率 */
+      let billingRateData = this.chartData2.billingRateData;
 
-      // ========== 注册自定义图形 ==========
-      const CubeFront = echarts.graphic.extendShape({
-        shape: { x: 0, y: 0 },
-        buildPath(ctx, shape) {
-          const xAxisPoint = shape.xAxisPoint;
-          const offset = [25, 25]; // 👈 从 [40,40] 改为 [25,25]
-          const c0 = [shape.x - offset[0], shape.y];
-          const c1 = [shape.x + offset[1], shape.y];
-          const c2 = [xAxisPoint[0] + offset[1], xAxisPoint[1]];
-          const c3 = [xAxisPoint[0] - offset[0], xAxisPoint[1]];
-          ctx.moveTo(c0[0], c0[1])
-            .lineTo(c1[0], c1[1])
-            .lineTo(c2[0], c2[1])
-            .lineTo(c3[0], c3[1])
-            .closePath();
-        }
-      });
-
-      const CubeRight = echarts.graphic.extendShape({
-        shape: { x: 0, y: 0 },
-        buildPath(ctx, shape) {
-          const xAxisPoint = shape.xAxisPoint;
-          // 👈 所有 +40 / +60 改为 +25 / +35
-          const c0 = [shape.x + 25, shape.y];
-          const c1 = [shape.x + 35, shape.y - 16];
-          const c2 = [xAxisPoint[0] + 35, xAxisPoint[1] - 16];
-          const c3 = [xAxisPoint[0] + 25, xAxisPoint[1]];
-          ctx.moveTo(c0[0], c0[1])
-            .lineTo(c1[0], c1[1])
-            .lineTo(c2[0], c2[1])
-            .lineTo(c3[0], c3[1])
-            .closePath();
-        }
-      });
-
-      const CubeTop = echarts.graphic.extendShape({
-        shape: { x: 0, y: 0 },
-        buildPath(ctx, shape) {
-          // 👈 对应调整顶部宽度
-          const c0 = [shape.x - 25, shape.y];
-          const c1 = [shape.x + 25, shape.y];
-          const c2 = [shape.x + 35, shape.y - 16];
-          const c3 = [shape.x - 15, shape.y - 16];
-          ctx.moveTo(c0[0], c0[1])
-            .lineTo(c1[0], c1[1])
-            .lineTo(c2[0], c2[1])
-            .lineTo(c3[0], c3[1])
-            .closePath();
-        }
-      });
-
-      echarts.graphic.registerShape('cubeFront', CubeFront);
-      echarts.graphic.registerShape('cubeRight', CubeRight);
-      echarts.graphic.registerShape('cubeTop', CubeTop);
-
-      const imageArr = [
-        require('@/assets/images/statistics/1.png'),
-        require('@/assets/images/statistics/2.png'),
-        require('@/assets/images/statistics/3.png'),
-        require('@/assets/images/statistics/4.png'),
-        require('@/assets/images/statistics/5.png'),
-      ];
-
-      const CubeColors = {
-        front: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-          { offset: 0, color: 'rgba(45,193,178,1)' },
-          { offset: 1, color: 'rgba(191,237,232,1)' }
-        ]),
-        right: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-          { offset: 0, color: 'rgba(23,148,135,1)' },
-          { offset: 1, color: 'rgba(138,219,211,1)' }
-        ]),
-        top: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-          { offset: 0, color: 'rgba(100,231,218,1)' },
-          { offset: 1, color: 'rgba(177,244,237,1)' }
-        ])
-      };
-
-      const renderItem = (params, api) => {
-        const location = api.coord([api.value(0), api.value(1)]);
-        const dataIndex = params.dataIndex;
-        const imageURL = imageArr[dataIndex] || '';
-
-        return {
-          type: 'group',
-          children: [
-            {
-              type: 'cubeFront',
-              shape: {
-                x: location[0],
-                y: location[1],
-                xAxisPoint: api.coord([api.value(0), 0])
-              },
-              style: { fill: CubeColors.front }
-            },
-            {
-              type: 'cubeRight',
-              shape: {
-                x: location[0],
-                y: location[1],
-                xAxisPoint: api.coord([api.value(0), 0])
-              },
-              style: { fill: CubeColors.right }
-            },
-            {
-              type: 'cubeTop',
-              shape: {
-                x: location[0],
-                y: location[1]
-              },
-              style: { fill: CubeColors.top }
-            },
-            {
-              type: 'image',
-              x: location[0] - 20,
-              y: location[1] - 95,
-              style: { image: imageURL },
-              z: 2
-            }
-          ]
-        };
-      };
-
-      const maxData = Math.max(...yData);
-      const yAxisMax = Math.ceil(maxData * 1.2); // 多留 20% 空间
+      // 构建横坐标数据（格式：轩轩:44人，计费率为65%）
+      let xAxisData = [];
+      for (let i = 0; i < createNameData.length; i++) {
+        xAxisData.push(`${createNameData[i]}:${totalData[i]}人,计费率${billingRateData[i]}%`);
+      }
 
       // ========== 配置 ==========
       const option = {
         tooltip: {
           trigger: 'axis',
-          axisPointer: { type: 'shadow' },
-          borderColor: '#2DC9C0',
-          borderWidth: 2
         },
         grid: {
-          top: '20%',      // 上边距（给 xAxis 标签和 label 留空间）
-          bottom: '2%',   // 下边距（给 x 轴文字留空间）
+          top: '12%',      // 上边距（给 xAxis 标签和 label 留空间）
+          bottom: '10%',   // 下边距（给 x 轴文字留空间）
           left: '8%',      // 左边距（给 y 轴数值留空间）
           right: '4%',     // 右边距（通常可小一点）
           containLabel: true // 自动包含 axisLabel，防止文字被裁剪
         },
-        xAxis: {
-          type: 'category',
-          data: xData,
-          axisTick: { show: false },
-          axisLine: { lineStyle: { color: '#EDF2F7' } },
-          axisLabel: {
-            fontSize: 16,        // 字体放大
-            fontWeight: 'bold',  // 加粗
-            color: '#333',
-            formatter: (value, index) => {
-              return `${value}：${yData[index]}人`;
-            }
+        legend: {
+          icon: 'roundRect',
+          top: 5,
+          itemHeight: 10,
+          itemWidth: 10,
+          textStyle: {
+            color: '#000'
           },
         },
-        yAxis: {
-          max: yAxisMax, // ✅ 动态最大值
+        xAxis: {
+          type: 'category',
+          data: xAxisData,
           axisLabel: {
+            fontSize: 12,
+            color: '#444',
+            interval: 0, // 0 表示显示所有，1 表示隔一个显示一个，以此类推
+            // 不设 interval:0，让 ECharts 自动优化
+            // 但配合 formatter 实现“省略+提示”
             formatter: function(value) {
-              // 只有整数才显示，否则显示空（ECharts 会自动跳过空标签）
-              if (Number.isInteger(value)) {
-                return value + '人';
-              }
-              return ''; // 非整数不显示
+              return value.length > 6 ? value.slice(0, 14) + '...' : value;
+            }
+          },
+          axisTick: {
+            show: false // 可选：隐藏刻度线更干净
+          },
+          axisLine: {
+            lineStyle: {
+              color: '#ccc'
+            }
+          },
+          splitLine: {
+            show: false,
+          }
+        },
+        yAxis: {
+          type: 'value',
+          offset: 0,
+          name: '',
+          axisLabel: {
+            show:true,
+            textStyle: {
+              color: '#9eaaba'
             },
             color: '#666'
+          },
+          nameTextStyle: {
+            color: '#9eaaba',
           },
           splitLine: {
             lineStyle: {
@@ -504,17 +464,114 @@ export default {
           },
           axisTick: {
             show: false
-          }
+          },
         },
-        series: [{
-          name: title,
-          type: 'custom',
-          renderItem: renderItem,
-          data: yData,
-        }]
+        series: [
+          {
+            name: '通过人数 ',
+            type: 'bar',
+            stack: '策略变更',
+            barWidth: '40%',
+            itemStyle: {
+              normal: {
+                color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                  {offset: 0, color: '#18FF80'},
+                  {offset: 1, color: 'rgba(24, 255, 182, 0.35)'}
+                ], false),
+              }
+            },
+            data: passedData,
+          },
+          {
+            name: '不合格人数',
+            type: 'bar',
+            stack: '策略变更',
+            barWidth: '40%',  //柱子宽度
+            itemStyle: {  //柱子颜色
+              normal: {
+                color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                  {offset: 0, color: '#FFBA18'},
+                  {offset: 1, color: 'rgba(255, 151, 24, 0.35)'}
+                ], false),
+              }
+            },
+            data: unqualifiedData
+          },
+          {
+            name: '硬性条件人数',
+            type: 'bar',
+            stack: '策略变更',
+            barWidth: '40%',
+            itemStyle: {
+              normal: {
+                color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                  {offset: 0, color: '#1890FF'},
+                  {offset: 1, color: 'rgba(24, 144, 255, 0.35)'}
+
+                ], false),
+              }
+            },
+            data: hardRequirementsData,
+
+            // 4. 在每个柱子顶部显示总人数
+            label: {
+              show: true,
+              position: 'top',
+              formatter: function(params) {
+                // 显示该柱子的总人数（通过+不合格+硬性条件）
+                const total = totalData[params.dataIndex];
+                return `${total}人`;
+              },
+              color: '#666',
+              fontWeight: 'bold'
+            }
+          }
+        ]
       };
 
       this.chart2.setOption(option);
+    },
+
+    // 计费率表格求和
+    getSummaries(param) {
+      const { columns, data } = param;
+      const sums = [];
+
+      // 先计算合计值（用于计费率）
+      const totalSentSum = data.reduce((sum, item) => sum + (Number(item.totalSent) || 0), 0);
+      const hardRequirementNotMetSum = data.reduce((sum, item) => sum + (Number(item.hardRequirementNotMet) || 0), 0);
+      const billedCountSum = data.reduce((sum, item) => sum + (Number(item.billedCount) || 0), 0);
+      const remainingDenominatorSum = totalSentSum - hardRequirementNotMetSum; // 或直接 sum(item.remainingDenominator)
+
+      columns.forEach((column, index) => {
+        if (index === 0) {
+          sums[index] = '合计';
+          return;
+        }
+
+        const prop = column.property;
+
+        if (prop === 'billingRate') {
+          // 计费率 = 合计计费人数 / 合计剩余分母人数
+          if (remainingDenominatorSum > 0) {
+            const rate = (billedCountSum / remainingDenominatorSum * 100).toFixed(2);
+            sums[index] = `${rate}%`;
+          } else {
+            sums[index] = '0.00%';
+          }
+        } else if (prop === 'locationName') {
+          sums[index] = '';
+        } else {
+          // 其他数值列直接求和
+          const sum = data.reduce((acc, item) => {
+            const val = Number(item[prop]) || 0;
+            return acc + val;
+          }, 0);
+          sums[index] = sum;
+        }
+      });
+
+      return sums;
     }
   }
 };

@@ -17,5 +17,10 @@ public interface StatisticsService {
      * 统计分析 - 招聘员工 计费人数
      */
     AjaxResult personBillingCount(StatisticsQuery entity);
+
+    /**
+     * 统计分析 - 后加的计费率
+     */
+    AjaxResult rateCalculation(StatisticsQuery entity);
 }
 

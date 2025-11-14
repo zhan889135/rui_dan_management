@@ -77,6 +77,10 @@ public class Feedback extends BaseEntity {
     @Excel(name = "硬性条件", readConverterExp = "Y=是,N=否", width = 10)
     private String hardRequirements;
 
+    /** 创建者名称 */
+    @Excel(name = "招聘人", width = 14)
+    private String createName;
+
     /** 是否计费1Y-是；N-否 */
     @Excel(name = "是否计费", readConverterExp = "Y=是,N=否", width = 10)
     private String isBilling;
@@ -103,9 +107,6 @@ public class Feedback extends BaseEntity {
     /** 供应商确认时间 */
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     private Date level2Time;
-
-    /** 创建者名称 */
-    private String createName;
 
     /** 分为三个列表，deptLevel：1总部，能看所有的，2供应商，能看总部推送的，3员工，能看供应商推送的 */
     @TableField(exist = false)

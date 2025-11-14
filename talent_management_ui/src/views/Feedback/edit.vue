@@ -85,6 +85,12 @@
                   </el-radio-group>
                 </el-form-item>
               </el-col>
+
+              <el-col :span="24">
+                <el-form-item label="备注" prop="remark">
+                  <el-input type="textarea" :rows="4" placeholder="请输入备注" v-model="form.remark" maxlength="500"/>
+                </el-form-item>
+              </el-col>
             </span>
 
 
@@ -129,8 +135,13 @@
                   </el-radio-group>
                 </el-form-item>
               </el-col>
-            </span>
 
+              <el-col :span="24">
+                <el-form-item label="备注" prop="remark">
+                  <el-input type="textarea" :rows="4" placeholder="请输入备注" v-model="form.remark" maxlength="500"/>
+                </el-form-item>
+              </el-col>
+            </span>
 
             <!--  总部门可以更改招聘人和归属供应商    -->
             <span v-if="deptLevel === 1">
