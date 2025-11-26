@@ -108,23 +108,23 @@ export default {
       flowInterval: null,
 
       chartData1:{
-        x: ['青岛', '北京', '济南', '吉林', '南京', '武汉', '青岛', '北京', '济南', '吉林', '南京', '武汉'],
-        y: [5, 20, 36, 10, 10, 20, 5, 20, 36, 10, 10, 20],
+        x: [],
+        y: [],
       },
 
       chartData2:{
         /** 招聘人 */
-        createNameData: ['张三', '李四', '五', '二', '一'],
+        createNameData: [],
         /** 硬性条件人数 */
-        hardRequirementsData: [1, 1, 1, 1, 1],
+        hardRequirementsData: [],
         /** 不合格人数 */
-        unqualifiedData: [2, 2, 2, 2, 2],
+        unqualifiedData: [],
         /** 通过人数 */
-        passedData: [3, 3, 3, 3, 3],
+        passedData: [],
         /** 总送人数 */
-        totalData: [4, 4, 4, 4, 4],
+        totalData: [],
         /** 计费率 */
-        billingRateData: [5, 5, 5, 5, 5],
+        billingRateData: [],
       },
 
       // 计费情况表格...
