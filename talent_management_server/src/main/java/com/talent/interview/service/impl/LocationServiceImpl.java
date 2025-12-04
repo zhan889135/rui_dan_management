@@ -49,7 +49,7 @@ public class LocationServiceImpl implements LocationService {
         }
 
         // 只查公司名称 + 只查面试点位
-        wrapper.select(Location::getId, Location::getCompanyName, Location::getName);
+        wrapper.select(Location::getId, Location::getCompanyName, Location::getName, Location::getDeptId);
         return locationMapper.selectList(wrapper);
     }
 

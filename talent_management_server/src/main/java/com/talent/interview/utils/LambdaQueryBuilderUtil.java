@@ -5,10 +5,7 @@ import com.talent.common.constant.Constants;
 import com.talent.common.utils.SecurityUtils;
 import com.talent.common.utils.ServletUtils;
 import com.talent.common.utils.StringUtils;
-import com.talent.interview.entity.Feedback;
-import com.talent.interview.entity.Location;
-import com.talent.interview.entity.Report;
-import com.talent.interview.entity.Requirement;
+import com.talent.interview.entity.*;
 
 
 /**
@@ -187,6 +184,26 @@ public class LambdaQueryBuilderUtil {
                 wrapper.orderByAsc(Requirement::getOrderNum);
             }
         }
+        return wrapper;
+    }
+
+    /**
+     * 财务板块
+     */
+    public static LambdaQueryWrapper<Finance> buildFinanceQueryWrapper(Finance entity) {
+
+        LambdaQueryWrapper<Finance> wrapper = new LambdaQueryWrapper<>();
+
+        if (entity != null) {
+            // 模糊查询：面试点位名称
+            wrapper.like(StringUtils.isNotBlank(entity.getLocationName()), Finance::getLocationName, entity.getLocationName());
+            // 模糊查询：供应商名称
+            wrapper.like(StringUtils.isNotBlank(entity.getDeptName()), Finance::getDeptName, entity.getDeptName());
+            // 模糊查询：创建人名称
+            wrapper.like(StringUtils.isNotBlank(entity.getCreateName()), Finance::getCreateName, entity.getCreateName());
+        }
+
+        wrapper.orderByDesc(Finance::getCreateTime);
         return wrapper;
     }
 }

@@ -313,6 +313,21 @@ maxDec：最大小数
 export function validateDecimalField(formData, fieldName, value, maxInt, maxDec) {
   value = String(value ?? '');
 
+  // ==================== 新增逻辑：maxDec = 0 只允许整数 ====================
+  if (maxDec === 0) {
+    const intRegex = new RegExp(`^\\d{0,${maxInt}}$`);
+
+    if (intRegex.test(value)) {
+      // 合法整数
+      formData[fieldName] = value.slice(0, maxInt);
+    } else {
+      // 不合法时裁剪为前 maxInt 位整数
+      const match = value.match(new RegExp(`^(\\d{0,${maxInt}})`));
+      formData[fieldName] = match ? match[1] : '';
+    }
+    return; // 🔥 必须 return，避免走后面小数逻辑
+  }
+
   const regex = new RegExp(`^\\d{0,${maxInt}}(\\.\\d{0,${maxDec}})?$`);
   if (regex.test(value)) {
     // 合法时保留当前输入
