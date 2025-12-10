@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.talent.common.constant.Constants;
 import com.talent.common.domain.AjaxResult;
 import com.talent.common.utils.SecurityUtils;
+import com.talent.common.utils.StringUtils;
 import com.talent.common.utils.mybatisPlus.MyBatisBatchInsertHelper;
 import com.talent.interview.entity.Feedback;
 import com.talent.interview.entity.Finance;
@@ -36,11 +37,22 @@ public class FinanceServiceImpl implements FinanceService {
      */
     @Override
     public List<Finance> queryList(Finance entity) {
+
+        // ============ 查询财务信息 ============
         LambdaQueryWrapper<Finance> wrapper = LambdaQueryBuilderUtil.buildFinanceQueryWrapper(entity);
+
         List<Finance> financeList = financeMapper.selectList(wrapper);
 
+        // ============ 查询面试反馈信息 ============
+        LambdaQueryWrapper<Feedback> feedbackLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        // 日期范围查询
+        if (null != entity.getDateRange() && entity.getDateRange().length == 2) {
+            String beginDate = entity.getDateRange()[0];
+            String endDate = entity.getDateRange()[1];
+            feedbackLambdaQueryWrapper.between(Feedback::getInterviewDate, beginDate, endDate);
+        }
         // 面试反馈
-        List<Feedback>  feedbackList = feedbackMapper.selectList(null);
+        List<Feedback>  feedbackList = feedbackMapper.selectList(feedbackLambdaQueryWrapper);
 
         // 循环查询总金额：总金额 = 计费人数 * 金额 + 额外金额 * 计费人数（在年龄区间内的人数）
         for (Finance finance : financeList) {

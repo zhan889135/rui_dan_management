@@ -3,7 +3,9 @@ package com.talent.interview.utils;
 import com.talent.common.constant.Constants;
 import com.talent.common.utils.StringUtils;
 import com.talent.interview.entity.Feedback;
+import com.talent.interview.entity.Finance;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.List;
@@ -87,6 +89,28 @@ public class StatisticsUtil {
                 "isBillingYesCount", String.valueOf(isBillingYesCount),
                 "bothNullCount", String.valueOf(bothNullCount)
         );
+    }
+
+
+    /**
+     * 查询财务总金额
+     */
+    public static Map<String, String> calculateFinanceMoney(List<Finance> fullList) {
+        Map<String, String> map = Map.of("totalMoney", "0");
+        if (fullList == null || fullList.isEmpty()) {
+            return map;
+        }
+
+        BigDecimal total = BigDecimal.ZERO;
+        for (Finance finance : fullList) {
+            BigDecimal price = finance.getTotalPrice();
+            if (price != null) {
+                total = total.add(price);
+            }
+        }
+
+        // 使用 toPlainString() 避免科学计数法，且保留所有小数位
+        return Map.of("totalMoney", total.toPlainString());
     }
 
 }
