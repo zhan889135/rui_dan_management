@@ -1,6 +1,8 @@
 package com.talent.interview.utils;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.talent.common.constant.Constants;
+import com.talent.common.utils.SecurityUtils;
 import com.talent.common.utils.StringUtils;
 import com.talent.interview.entity.Feedback;
 import com.talent.interview.entity.Finance;
@@ -11,6 +13,7 @@ import java.time.ZoneId;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Function;
 
 /**
  * 统计类型的工具类
@@ -68,18 +71,43 @@ public class StatisticsUtil {
                 })
                 .toList();
 
+        // 总送人数求和；
         long totalCount = nearestDayList.size();
 
+        // 获取登录人部门等级
+        Integer deptLevel = SecurityUtils.getLoginUser().getDeptLevel();
+
+        // 根据部门等级，选择字段获取方式
+        Function<Feedback, String> hardReqGetter;
+        Function<Feedback, String> billingGetter;
+
+        // 一、二级 ：硬性条件、是否计费
+        if (deptLevel != null && (Constants.RET_CODE_1_NUM == deptLevel || Constants.RET_CODE_2_NUM == deptLevel)) {
+            hardReqGetter = Feedback::getHardRequirements;
+            billingGetter = Feedback::getIsBilling;
+        }
+        // 三级 ：硬性条件2、是否计费2
+        else {
+            hardReqGetter = Feedback::getHardRequirements2;
+            billingGetter = Feedback::getIsBilling2;
+        }
+
+        // 硬性条件选是
         long hardRequirementsYesCount = nearestDayList.stream()
-                .filter(f -> Constants.IS_DEL_Y.equalsIgnoreCase(f.getHardRequirements()))
+                .map(hardReqGetter)
+                .filter(Constants.IS_DEL_Y::equalsIgnoreCase)
                 .count();
 
+        // 是否计费选是
         long isBillingYesCount = nearestDayList.stream()
-                .filter(f -> Constants.IS_DEL_Y.equalsIgnoreCase(f.getIsBilling()))
+                .map(billingGetter)
+                .filter(Constants.IS_DEL_Y::equalsIgnoreCase)
                 .count();
 
+        // 未出总数（两个字段都为空）
         long bothNullCount = nearestDayList.stream()
-                .filter(f -> (StringUtils.isEmpty(f.getHardRequirements())) && (StringUtils.isEmpty(f.getIsBilling())))
+                .filter(f -> StringUtils.isEmpty(hardReqGetter.apply(f))
+                        && StringUtils.isEmpty(billingGetter.apply(f)))
                 .count();
 
         // 返回结果
